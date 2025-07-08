@@ -1,0 +1,18 @@
+package giftTypes
+
+type GiftResult struct {
+	GiftID  int64
+	Success bool
+	Err     error
+}
+
+type GiftSummary struct {
+	GiftID    int64
+	Requested int64
+	Success   int64
+}
+
+type GiftRequire struct {
+	ReceiverType []int
+	CountForBuy  int64
+}
