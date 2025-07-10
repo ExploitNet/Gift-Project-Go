@@ -14,7 +14,7 @@ func TestNewAccountManager(t *testing.T) {
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
 
-	manager := NewAccountManager(nil, userReceiverIDs, channelReceiverIDs, userCache, channelCache, "test_user")
+	manager := NewAccountManager(nil, userReceiverIDs, channelReceiverIDs, userCache, channelCache)
 
 	assert.NotNil(t, manager)
 }
@@ -23,7 +23,7 @@ func TestNewAccountManager_EmptyIDs(t *testing.T) {
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
 
-	manager := NewAccountManager(nil, []string{}, []string{}, userCache, channelCache, "test_user")
+	manager := NewAccountManager(nil, []string{}, []string{}, userCache, channelCache)
 
 	assert.NotNil(t, manager)
 }
@@ -32,7 +32,7 @@ func TestNewAccountManager_NilCache(t *testing.T) {
 	userReceiverIDs := []string{"123456789"}
 	channelReceiverIDs := []string{"987654321"}
 
-	manager := NewAccountManager(nil, userReceiverIDs, channelReceiverIDs, nil, nil, "test_user")
+	manager := NewAccountManager(nil, userReceiverIDs, channelReceiverIDs, nil, nil)
 
 	assert.NotNil(t, manager)
 }
@@ -40,7 +40,7 @@ func TestNewAccountManager_NilCache(t *testing.T) {
 func TestAccountManager_SetIds_NilAPI(t *testing.T) {
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
-	manager := NewAccountManager(nil, []string{"123456789"}, []string{"987654321"}, userCache, channelCache, "test_user")
+	manager := NewAccountManager(nil, []string{"123456789"}, []string{"987654321"}, userCache, channelCache)
 
 	ctx := context.Background()
 
@@ -55,7 +55,7 @@ func TestAccountManager_SetIds_EmptyIDs(t *testing.T) {
 	api := &tg.Client{}
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
-	manager := NewAccountManager(api, []string{}, []string{}, userCache, channelCache, "test_user")
+	manager := NewAccountManager(api, []string{}, []string{}, userCache, channelCache)
 
 	ctx := context.Background()
 	err := manager.SetIds(ctx)
@@ -66,7 +66,7 @@ func TestAccountManager_SetIds_EmptyIDs(t *testing.T) {
 func TestAccountManager_SetIds_ContextCancellation(t *testing.T) {
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
-	manager := NewAccountManager(nil, []string{"123456789"}, []string{"987654321"}, userCache, channelCache, "test_user")
+	manager := NewAccountManager(nil, []string{"123456789"}, []string{"987654321"}, userCache, channelCache)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
@@ -85,7 +85,7 @@ func TestAccountManager_Structure(t *testing.T) {
 	channelCache := &MockChannelCache{}
 	api := &tg.Client{}
 
-	manager := NewAccountManager(api, userReceiverIDs, channelReceiverIDs, userCache, channelCache, "test_user")
+	manager := NewAccountManager(api, userReceiverIDs, channelReceiverIDs, userCache, channelCache)
 
 	assert.NotNil(t, manager)
 }
@@ -93,7 +93,7 @@ func TestAccountManager_Structure(t *testing.T) {
 func TestAccountManager_InterfaceCompliance(t *testing.T) {
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
-	manager := NewAccountManager(nil, []string{}, []string{}, userCache, channelCache, "test_user")
+	manager := NewAccountManager(nil, []string{}, []string{}, userCache, channelCache)
 
 	// Verify that the manager has the SetIds method
 	assert.NotNil(t, manager.SetIds)
@@ -102,7 +102,7 @@ func TestAccountManager_InterfaceCompliance(t *testing.T) {
 func TestAccountManager_LoadUsersToCache_NilAPI(t *testing.T) {
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
-	manager := NewAccountManager(nil, []string{"123456789"}, []string{}, userCache, channelCache, "test_user")
+	manager := NewAccountManager(nil, []string{"123456789"}, []string{}, userCache, channelCache)
 
 	ctx := context.Background()
 
@@ -116,7 +116,7 @@ func TestAccountManager_LoadUsersToCache_NilAPI(t *testing.T) {
 func TestAccountManager_LoadChannelsToCache_NilAPI(t *testing.T) {
 	userCache := &MockUserCache{}
 	channelCache := &MockChannelCache{}
-	manager := NewAccountManager(nil, []string{}, []string{"987654321"}, userCache, channelCache, "test_user")
+	manager := NewAccountManager(nil, []string{}, []string{"987654321"}, userCache, channelCache)
 
 	ctx := context.Background()
 

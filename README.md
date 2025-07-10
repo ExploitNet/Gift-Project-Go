@@ -1,6 +1,6 @@
 # Gift Buyer - автоматическая покупка Telegram подарков
 
-[![Language: Russian](https://img.shields.io/badge/Language-Русский-blue)](#русский) [![Language: English](https://img.shields.io/badge/Language-English-green)](#english) [![Telegram](https://img.shields.io/badge/Telegram-@chiefssq-blue?logo=telegram)](https://t.me/cheifssq)
+[![Language: Russian](https://img.shields.io/badge/Language-Русский-blue)](#русский) [![Language: English](https://img.shields.io/badge/Language-English-green)](#english) [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/) [![Telegram](https://img.shields.io/badge/Telegram-@chiefssq-blue?logo=telegram)](https://t.me/cheifssq)
 
 ## 📑 Содержание
 
@@ -196,7 +196,39 @@ GOOS=darwin GOARCH=amd64 go build -o gift-buyer-macos cmd/main.go
 
 ## 📄 Лицензия
 
-Этот проект распространяется под лицензией MIT.
+Этот проект распространяется под лицензией **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)**.
+
+### Что это означает:
+
+✅ **Разрешено:**
+- Скачивать и использовать код для личных целей
+- Изучать код и учиться на нем
+- Делиться ссылкой на проект с указанием авторства
+
+❌ **Запрещено:**
+- Коммерческое использование (продажа, использование в коммерческих продуктах)
+- Создание форков и модификаций для распространения
+- Перепродажа или предоставление как платный сервис
+- Создание производных работ на основе этого кода
+
+⚖️ **Юридическая защита:**
+Данная лицензия имеет международную юридическую силу и защищает авторские права. Нарушение условий лицензии может повлечь за собой правовые последствия.
+
+Полный текст лицензии: [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
+**Что можно:**
+- ✅ Использовать для личных целей
+- ✅ Модифицировать и распространять
+- ✅ Изучать код
+
+**Что нельзя:**
+- ❌ Использовать в коммерческих целях
+- ❌ Продавать или перепродавать
+- ❌ Использовать для получения прибыли
+
+**Для коммерческого использования** свяжитесь с автором.
+
+Подробности в файле [LICENSE](LICENSE).
 
 ### 🚀 Быстрый запуск
 
@@ -672,7 +704,21 @@ The program automatically detects and handles critical API errors:
 
 ## 📄 License
 
-This project is distributed under the MIT License.
+This project is distributed under **Creative Commons BY-NC-SA 4.0**.
+
+**What you can do:**
+- ✅ Use for personal purposes
+- ✅ Modify and distribute
+- ✅ Study the code
+
+**What you cannot do:**
+- ❌ Use for commercial purposes
+- ❌ Sell or resell
+- ❌ Use to generate profit
+
+**For commercial use** contact the author.
+
+Details in [LICENSE](LICENSE) file.
 
 ### ⚙️ Detailed Configuration
 
@@ -947,4 +993,22 @@ This software is provided "as is" for educational purposes. Users are responsibl
 
 ## 📄 License
 
-This project is provided as-is for educational and personal use.
+This project is licensed under **Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)**.
+
+### What this means:
+
+✅ **Allowed:**
+- Download and use the code for personal purposes
+- Study the code and learn from it
+- Share the project link with attribution
+
+❌ **Prohibited:**
+- Commercial use (selling, using in commercial products)
+- Creating forks and modifications for distribution
+- Reselling or offering as a paid service
+- Creating derivative works based on this code
+
+⚖️ **Legal Protection:**
+This license has international legal force and protects copyright. Violation of license terms may result in legal consequences.
+
+Full license text: [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/)

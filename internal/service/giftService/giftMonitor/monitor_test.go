@@ -160,24 +160,19 @@ func TestGiftMonitor_Start_FirstRun(t *testing.T) {
 	mockCache.On("SetGift", int64(1), gift1).Return().Once()
 	mockCache.On("SetGift", int64(2), gift2).Return().Once()
 
-	// On subsequent runs, gifts are already in cache
-	mockCache.On("HasGift", int64(1)).Return(true)
-	mockCache.On("HasGift", int64(2)).Return(true)
-	mockNotification.On("SendErrorNotification", mock.Anything, mock.MatchedBy(func(err error) bool {
-		return err.Error() == "touch grass: first run"
-	})).Return(nil).Times(1)
-
+	// On first run, gifts are not in cache yet
+	mockCache.On("HasGift", int64(1)).Return(false)
+	mockCache.On("HasGift", int64(2)).Return(false)
 	newGifts, err := monitor.Start(ctx)
 
-	// Should timeout since no new gifts are found after first run error
-	assert.Error(t, err)
-	assert.Equal(t, context.DeadlineExceeded, err)
-	assert.Nil(t, newGifts)
+	// Should find gifts on first run since they are not in cache yet
+	assert.NoError(t, err)
+	assert.NotNil(t, newGifts)
+	assert.Len(t, newGifts, 2)
 
 	mockCache.AssertExpectations(t)
 	mockManager.AssertExpectations(t)
 	mockValidator.AssertExpectations(t)
-	mockNotification.AssertExpectations(t)
 }
 
 func TestGiftMonitor_Start_SecondRunWithNewGifts(t *testing.T) {
@@ -262,11 +257,8 @@ func TestGiftMonitor_Start_NoNewGifts(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
 	defer cancel()
 
-	// Setup mocks to return no new gifts on first run (triggers SendErrorNotification)
+	// Setup mocks to return no new gifts - should timeout without error notifications since first run logic is disabled
 	mockManager.On("GetAvailableGifts", mock.AnythingOfType("*context.timerCtx")).Return([]*tg.StarGift{}, nil)
-	mockNotification.On("SendErrorNotification", mock.Anything, mock.MatchedBy(func(err error) bool {
-		return err.Error() == "touch grass: first run"
-	})).Return(nil).Times(1)
 
 	// Start monitoring - it should continue until context timeout
 	newGifts, err := monitor.Start(ctx)
@@ -277,7 +269,6 @@ func TestGiftMonitor_Start_NoNewGifts(t *testing.T) {
 
 	mockCache.AssertExpectations(t)
 	mockManager.AssertExpectations(t)
-	mockNotification.AssertExpectations(t)
 }
 
 func TestGiftMonitor_CheckForNewGifts_Success(t *testing.T) {

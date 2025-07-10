@@ -78,9 +78,6 @@
         "rpc_rate_limit": 30,
         
         "_comment_testing": "=== ТЕСТИРОВАНИЕ ===",
-        "test_mode": false,
-        
-        "_comment_subscription": "=== ПРОВЕРКА ПОДПИСКИ. Аккаунт, с которого оформлена подписка на канал @cheifssq. ===",
-        "subscribe_tag": "@yourusername"
+        "test_mode": false
     }
 }

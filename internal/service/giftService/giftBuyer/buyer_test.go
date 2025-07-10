@@ -130,25 +130,6 @@ func (m *MockMonitorProcessor) MonitorProcess(ctx context.Context, resultsCh cha
 	m.Called(ctx, resultsCh, doneCh, gifts)
 }
 
-type MockAccountManager struct {
-	mock.Mock
-}
-
-func (m *MockAccountManager) SetIds(ctx context.Context) error {
-	args := m.Called(ctx)
-	return args.Error(0)
-}
-
-func (m *MockAccountManager) CheckSubscription(usertag string) bool {
-	args := m.Called(usertag)
-	return args.Bool(0)
-}
-
-func (m *MockAccountManager) ValidateSubscription(usertag string) bool {
-	args := m.Called(usertag)
-	return args.Bool(0)
-}
-
 // Helper functions
 func createTestGift(id int64, stars int64) *tg.StarGift {
 	return &tg.StarGift{
@@ -157,7 +138,7 @@ func createTestGift(id int64, stars int64) *tg.StarGift {
 	}
 }
 
-func createMockBuyer() (*giftBuyerImpl, *MockGiftManager, *MockNotificationService, *MockUserCache, *MockRateLimiter, *MockInvoiceCreator, *MockPurchaseProcessor, *MockMonitorProcessor, *MockAccountManager) {
+func createMockBuyer() (*giftBuyerImpl, *MockGiftManager, *MockNotificationService, *MockUserCache, *MockRateLimiter, *MockInvoiceCreator, *MockPurchaseProcessor, *MockMonitorProcessor) {
 	mockManager := &MockGiftManager{}
 	mockNotification := &MockNotificationService{}
 	mockUserCache := &MockUserCache{}
@@ -165,7 +146,6 @@ func createMockBuyer() (*giftBuyerImpl, *MockGiftManager, *MockNotificationServi
 	mockInvoiceCreator := &MockInvoiceCreator{}
 	mockPurchaseProcessor := &MockPurchaseProcessor{}
 	mockMonitorProcessor := &MockMonitorProcessor{}
-	mockAccountManager := &MockAccountManager{}
 
 	buyer := &giftBuyerImpl{
 		manager:              mockManager,
@@ -184,11 +164,10 @@ func createMockBuyer() (*giftBuyerImpl, *MockGiftManager, *MockNotificationServi
 		invoiceCreator:       mockInvoiceCreator,
 		purchaseProcessor:    mockPurchaseProcessor,
 		monitorProcessor:     mockMonitorProcessor,
-		accountManager:       mockAccountManager,
-		usertag:              "test_user",
+		errorLogsWriter:      &MockLogsWriter{},
 	}
 
-	return buyer, mockManager, mockNotification, mockUserCache, mockRateLimiter, mockInvoiceCreator, mockPurchaseProcessor, mockMonitorProcessor, mockAccountManager
+	return buyer, mockManager, mockNotification, mockUserCache, mockRateLimiter, mockInvoiceCreator, mockPurchaseProcessor, mockMonitorProcessor
 }
 
 func TestNewGiftBuyer(t *testing.T) {
@@ -238,12 +217,11 @@ func TestNewGiftBuyer(t *testing.T) {
 
 func TestGiftBuyerImpl_BuyGift(t *testing.T) {
 	t.Run("успешная покупка подарков", func(t *testing.T) {
-		buyer, _, _, _, _, _, mockPurchaseProcessor, mockMonitorProcessor, mockAccountManager := createMockBuyer()
+		buyer, _, _, _, _, _, mockPurchaseProcessor, mockMonitorProcessor := createMockBuyer()
 
 		// Настраиваем моки
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 		mockPurchaseProcessor.On("PurchaseGift", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockAccountManager.On("CheckSubscription", "test_user").Return(true)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 2, ReceiverType: []int{1}},
@@ -276,10 +254,9 @@ func TestGiftBuyerImpl_BuyGift(t *testing.T) {
 	})
 
 	t.Run("покупка с пустым списком подарков", func(t *testing.T) {
-		buyer, _, _, _, _, _, _, mockMonitorProcessor, mockAccountManager := createMockBuyer()
+		buyer, _, _, _, _, _, _, mockMonitorProcessor := createMockBuyer()
 
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
-		mockAccountManager.On("CheckSubscription", "test_user").Return(true)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{}
 
@@ -308,10 +285,9 @@ func TestGiftBuyerImpl_BuyGift(t *testing.T) {
 	})
 
 	t.Run("покупка с отменой контекста", func(t *testing.T) {
-		buyer, _, _, _, _, _, _, mockMonitorProcessor, mockAccountManager := createMockBuyer()
+		buyer, _, _, _, _, _, _, mockMonitorProcessor := createMockBuyer()
 
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
-		mockAccountManager.On("CheckSubscription", "test_user").Return(true)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
@@ -328,7 +304,7 @@ func TestGiftBuyerImpl_BuyGift(t *testing.T) {
 
 func TestGiftBuyerImpl_Close(t *testing.T) {
 	t.Run("закрытие buyer", func(t *testing.T) {
-		buyer, _, _, _, mockRateLimiter, _, _, _, _ := createMockBuyer()
+		buyer, _, _, _, mockRateLimiter, _, _, _ := createMockBuyer()
 
 		mockRateLimiter.On("Close").Return()
 
@@ -340,11 +316,10 @@ func TestGiftBuyerImpl_Close(t *testing.T) {
 
 func TestGiftBuyerImpl_ConcurrentPurchases(t *testing.T) {
 	t.Run("конкурентные покупки", func(t *testing.T) {
-		buyer, _, _, _, _, _, mockPurchaseProcessor, mockMonitorProcessor, mockAccountManager := createMockBuyer()
+		buyer, _, _, _, _, _, mockPurchaseProcessor, mockMonitorProcessor := createMockBuyer()
 
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 		mockPurchaseProcessor.On("PurchaseGift", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockAccountManager.On("CheckSubscription", "test_user").Return(true)
 
 		// Создаем много подарков для тестирования конкурентности
 		gifts := make(map[*tg.StarGift]*giftTypes.GiftRequire)
@@ -382,12 +357,11 @@ func TestGiftBuyerImpl_ConcurrentPurchases(t *testing.T) {
 
 func TestGiftBuyerImpl_MaxBuyCountLimit(t *testing.T) {
 	t.Run("ограничение максимального количества покупок", func(t *testing.T) {
-		buyer, _, _, _, _, _, mockPurchaseProcessor, mockMonitorProcessor, mockAccountManager := createMockBuyer()
+		buyer, _, _, _, _, _, mockPurchaseProcessor, mockMonitorProcessor := createMockBuyer()
 		buyer.counter = atomicCounter.NewAtomicCounter(2) // Ограничиваем до 2 покупок
 
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 		mockPurchaseProcessor.On("PurchaseGift", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		mockAccountManager.On("CheckSubscription", "test_user").Return(true)
 
 		// Пытаемся купить больше чем лимит
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
