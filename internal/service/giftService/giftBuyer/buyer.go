@@ -5,10 +5,12 @@ package giftBuyer
 
 import (
 	"context"
+	"fmt"
+	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
+	"gift-buyer/internal/service/giftService/giftServiceHelpers"
 	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
-	"gift-buyer/pkg/logger"
 	"sync"
 	"time"
 
@@ -30,6 +32,9 @@ type giftBuyerImpl struct {
 
 	// invoiceCreator creates invoices for gift purchases
 	invoiceCreator giftInterfaces.InvoiceCreator
+
+	// logsWriter is used to write logs to a file
+	errorLogsWriter logsWriter.LogsWriter
 
 	// api is the Telegram client used for payment operations
 	api *tg.Client
@@ -87,6 +92,7 @@ func NewGiftBuyer(
 	counter giftInterfaces.Counter,
 	accountManager giftInterfaces.AccountManager,
 	usetag string,
+	errorLogsWriter logsWriter.LogsWriter,
 ) *giftBuyerImpl {
 	return &giftBuyerImpl{
 		api:                  api,
@@ -106,6 +112,7 @@ func NewGiftBuyer(
 		purchaseProcessor:    purchaseProcessor,
 		monitorProcessor:     monitorProcessor,
 		accountManager:       accountManager,
+		errorLogsWriter:      errorLogsWriter,
 	}
 }
 
@@ -136,7 +143,7 @@ func (gm *giftBuyerImpl) BuyGift(ctx context.Context, gifts map[*tg.StarGift]*gi
 	go gm.monitorProcessor.MonitorProcess(ctx, resultsCh, doneCh, gifts)
 
 	if !gm.accountManager.CheckSubscription(gm.usertag) {
-		logger.GlobalLogger.Errorf("❌ Subscription check FAILED for user: %s, aborting purchase", gm.usertag)
+		giftServiceHelpers.LogError(gm.errorLogsWriter, fmt.Sprintf("❌ Subscription check FAILED for user: %s, aborting purchase", gm.usertag))
 		resultsCh <- giftTypes.GiftResult{
 			GiftID:  0,
 			Success: false,
@@ -222,10 +229,14 @@ func (gm *giftBuyerImpl) buyGiftWithRetry(ctx context.Context, gift *tg.StarGift
 		if err := gm.purchaseProcessor.PurchaseGift(ctx, gift, receiverTypes); err != nil {
 			gm.counter.Decrement()
 			lastErr = err
+			resChan <- giftTypes.GiftResult{
+				GiftID:  gift.ID,
+				Success: false,
+				Err:     err,
+			}
 			continue
 		}
 
-		logger.GlobalLogger.Infof("Successfully purchased gift %d on attempt %d", gift.ID, j+1)
 		resChan <- giftTypes.GiftResult{
 			GiftID:  gift.ID,
 			Success: true,

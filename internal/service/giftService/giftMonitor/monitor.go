@@ -5,10 +5,12 @@ package giftMonitor
 
 import (
 	"context"
+	"fmt"
+	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
+	"gift-buyer/internal/service/giftService/giftServiceHelpers"
 	"gift-buyer/internal/service/giftService/giftTypes"
-	"gift-buyer/pkg/errors"
-	"gift-buyer/pkg/logger"
+
 	"sync"
 	"time"
 
@@ -30,6 +32,10 @@ type giftMonitorImpl struct {
 
 	// notification sends alerts about new eligible gifts
 	notification giftInterfaces.NotificationService
+
+	// logsWriter is used to write logs to a file
+	errorLogsWriter logsWriter.LogsWriter
+	infoLogsWriter  logsWriter.LogsWriter
 
 	// ticker controls the monitoring interval
 	ticker *time.Ticker
@@ -62,14 +68,18 @@ func NewGiftMonitor(
 	validator giftInterfaces.GiftValidator,
 	notification giftInterfaces.NotificationService,
 	tickTime time.Duration,
+	errorLogsWriter logsWriter.LogsWriter,
+	infoLogsWriter logsWriter.LogsWriter,
 ) *giftMonitorImpl {
 	return &giftMonitorImpl{
-		cache:        cache,
-		manager:      manager,
-		validator:    validator,
-		notification: notification,
-		ticker:       time.NewTicker(tickTime),
-		firstRun:     true,
+		cache:           cache,
+		manager:         manager,
+		validator:       validator,
+		notification:    notification,
+		ticker:          time.NewTicker(tickTime),
+		firstRun:        true,
+		errorLogsWriter: errorLogsWriter,
+		infoLogsWriter:  infoLogsWriter,
 	}
 }
 
@@ -111,7 +121,7 @@ func (gm *giftMonitorImpl) Start(ctx context.Context) (map[*tg.StarGift]*giftTyp
 					return
 				}
 				if len(newGifts) == 0 {
-					logger.GlobalLogger.Info("no new gifts found")
+					giftServiceHelpers.LogInfo(gm.infoLogsWriter, "no new gifts found")
 					return
 				}
 				resultCh <- newGifts
@@ -121,7 +131,7 @@ func (gm *giftMonitorImpl) Start(ctx context.Context) (map[*tg.StarGift]*giftTyp
 		case err := <-errCh:
 			if !gm.IsPaused() {
 				gm.notification.SendErrorNotification(ctx, err)
-				logger.GlobalLogger.Errorf("monitoring error: %v", err)
+				giftServiceHelpers.LogError(gm.errorLogsWriter, err.Error())
 			}
 			continue
 		}
@@ -151,17 +161,17 @@ func (gm *giftMonitorImpl) checkForNewGifts(ctx context.Context) (map[*tg.StarGi
 			continue
 		}
 		if giftRequire, ok := gm.validator.IsEligible(gift); ok {
-			logger.GlobalLogger.Infof("gift id %d is valid", gift.ID)
+			giftServiceHelpers.LogInfo(gm.infoLogsWriter, fmt.Sprintf("gift id %d is valid", gift.ID))
 			newValidGifts[gift] = giftRequire
 		}
 
 		gm.cache.SetGift(gift.ID, gift)
 	}
 
-	if gm.firstRun {
-		gm.firstRun = false
-		return nil, errors.Wrap(errors.New("first run"), "touch grass")
-	}
+	// if gm.firstRun {
+	// 	gm.firstRun = false
+	// 	return nil, errors.Wrap(errors.New("first run"), "touch grass")
+	// }
 
 	return newValidGifts, nil
 }
@@ -173,7 +183,7 @@ func (gm *giftMonitorImpl) Pause() {
 	defer gm.mu.Unlock()
 	if !gm.paused {
 		gm.paused = true
-		logger.GlobalLogger.Info("Gift monitoring paused")
+		giftServiceHelpers.LogInfo(gm.infoLogsWriter, "Gift monitoring paused")
 	}
 }
 
@@ -184,7 +194,7 @@ func (gm *giftMonitorImpl) Resume() {
 	defer gm.mu.Unlock()
 	if gm.paused {
 		gm.paused = false
-		logger.GlobalLogger.Info("Gift monitoring resumed")
+		giftServiceHelpers.LogInfo(gm.infoLogsWriter, "Gift monitoring resumed")
 	}
 }
 

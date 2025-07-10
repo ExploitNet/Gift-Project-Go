@@ -17,6 +17,7 @@ coverage.html
 *.tmp
 *.temp
 *.log
+*.jsonl
 
 .vscode/
 .idea/

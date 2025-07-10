@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"gift-buyer/internal/infrastructure/logsWriter/logTypes"
 	"gift-buyer/internal/service/giftService/giftTypes"
 
 	"github.com/gotd/td/tg"
@@ -42,6 +43,13 @@ func (m *MockNotificationService) SendUpdateNotification(ctx context.Context, ve
 	return args.Error(0)
 }
 
+// MockLogsWriter для тестирования
+type MockLogsWriter struct{}
+
+func (m *MockLogsWriter) Write(entry *logTypes.LogEntry) error {
+	return nil
+}
+
 func createTestGift(id int64, stars int64) *tg.StarGift {
 	return &tg.StarGift{
 		ID:    id,
@@ -51,8 +59,10 @@ func createTestGift(id int64, stars int64) *tg.StarGift {
 
 func TestNewGiftBuyerMonitoring(t *testing.T) {
 	mockNotification := &MockNotificationService{}
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
 
-	monitor := NewGiftBuyerMonitoring(nil, mockNotification)
+	monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
 	assert.NotNil(t, monitor)
 	assert.Nil(t, monitor.api)
@@ -62,7 +72,9 @@ func TestNewGiftBuyerMonitoring(t *testing.T) {
 func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 	t.Run("успешный мониторинг с результатами", func(t *testing.T) {
 		mockNotification := &MockNotificationService{}
-		monitor := NewGiftBuyerMonitoring(nil, mockNotification)
+		mockInfoWriter := &MockLogsWriter{}
+		mockErrorWriter := &MockLogsWriter{}
+		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 2, ReceiverType: []int{1}},
@@ -99,7 +111,9 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 
 	t.Run("частичный успех", func(t *testing.T) {
 		mockNotification := &MockNotificationService{}
-		monitor := NewGiftBuyerMonitoring(nil, mockNotification)
+		mockInfoWriter := &MockLogsWriter{}
+		mockErrorWriter := &MockLogsWriter{}
+		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 2, ReceiverType: []int{1}},
@@ -133,7 +147,9 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 
 	t.Run("полный провал", func(t *testing.T) {
 		mockNotification := &MockNotificationService{}
-		monitor := NewGiftBuyerMonitoring(nil, mockNotification)
+		mockInfoWriter := &MockLogsWriter{}
+		mockErrorWriter := &MockLogsWriter{}
+		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
@@ -166,7 +182,9 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 
 	t.Run("использование логгера вместо бота", func(t *testing.T) {
 		mockNotification := &MockNotificationService{}
-		monitor := NewGiftBuyerMonitoring(nil, mockNotification)
+		mockInfoWriter := &MockLogsWriter{}
+		mockErrorWriter := &MockLogsWriter{}
+		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
@@ -199,7 +217,9 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 
 	t.Run("отмена контекста", func(t *testing.T) {
 		mockNotification := &MockNotificationService{}
-		monitor := NewGiftBuyerMonitoring(nil, mockNotification)
+		mockInfoWriter := &MockLogsWriter{}
+		mockErrorWriter := &MockLogsWriter{}
+		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
@@ -235,7 +255,9 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 
 	t.Run("закрытие канала результатов", func(t *testing.T) {
 		mockNotification := &MockNotificationService{}
-		monitor := NewGiftBuyerMonitoring(nil, mockNotification)
+		mockInfoWriter := &MockLogsWriter{}
+		mockErrorWriter := &MockLogsWriter{}
+		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
 		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
 			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},

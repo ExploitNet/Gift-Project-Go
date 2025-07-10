@@ -9,7 +9,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"gift-buyer/internal/config"
-	"gift-buyer/pkg/logger"
+	"gift-buyer/internal/infrastructure/logsWriter"
+	"gift-buyer/internal/service/giftService/giftServiceHelpers"
 	mathRand "math/rand"
 	"strings"
 	"time"
@@ -38,6 +39,9 @@ type notificationServiceImpl struct {
 
 	// Config contains Telegram settings including notification chat ID
 	Config *config.TgSettings
+
+	// logsWriter is used to write logs to a file
+	errorLogsWriter logsWriter.LogsWriter
 }
 
 // NewNotification creates a new NotificationService instance with the specified bot client and configuration.
@@ -49,10 +53,11 @@ type notificationServiceImpl struct {
 //
 // Returns:
 //   - giftInterfaces.NotificationService: configured notification service instance
-func NewNotification(bot *tg.Client, config *config.TgSettings) *notificationServiceImpl {
+func NewNotification(bot *tg.Client, config *config.TgSettings, errorLogsWriter logsWriter.LogsWriter) *notificationServiceImpl {
 	return &notificationServiceImpl{
-		Bot:    bot,
-		Config: config,
+		Bot:             bot,
+		Config:          config,
+		errorLogsWriter: errorLogsWriter,
 	}
 }
 
@@ -73,7 +78,7 @@ func NewNotification(bot *tg.Client, config *config.TgSettings) *notificationSer
 //   - error: notification sending error after all retries exhausted
 func (ns *notificationServiceImpl) sendNotification(ctx context.Context, message string) error {
 	if ns.Bot == nil || ns.Config == nil || ns.Config.NotificationChatID == 0 {
-		logger.GlobalLogger.Warn("Bot client or notification chat ID not configured")
+		giftServiceHelpers.LogError(ns.errorLogsWriter, "Bot client or notification chat ID not configured")
 		return nil
 	}
 
@@ -101,7 +106,7 @@ func (ns *notificationServiceImpl) sendNotification(ctx context.Context, message
 			continue
 		}
 
-		logger.GlobalLogger.Errorf("Failed to send notification: %v", err)
+		giftServiceHelpers.LogError(ns.errorLogsWriter, fmt.Sprintf("Failed to send notification: %v", err))
 		return err
 	}
 
@@ -198,6 +203,7 @@ func (ns *notificationServiceImpl) SendBuyStatus(ctx context.Context, status str
 }
 
 func (ns *notificationServiceImpl) SendErrorNotification(ctx context.Context, err error) error {
+	giftServiceHelpers.LogError(ns.errorLogsWriter, err.Error())
 	return ns.sendNotification(ctx, err.Error())
 }
 

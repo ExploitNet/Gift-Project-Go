@@ -3,23 +3,28 @@ package giftBuyerMonitoring
 import (
 	"context"
 	"fmt"
+	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
+	"gift-buyer/internal/service/giftService/giftServiceHelpers"
 	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
-	"gift-buyer/pkg/logger"
 
 	"github.com/gotd/td/tg"
 )
 
 type GiftBuyerMonitoringImpl struct {
-	api          *tg.Client
-	notification giftInterfaces.NotificationService
+	api             *tg.Client
+	notification    giftInterfaces.NotificationService
+	infoLogsWriter  logsWriter.LogsWriter
+	errorLogsWriter logsWriter.LogsWriter
 }
 
-func NewGiftBuyerMonitoring(api *tg.Client, notification giftInterfaces.NotificationService) *GiftBuyerMonitoringImpl {
+func NewGiftBuyerMonitoring(api *tg.Client, notification giftInterfaces.NotificationService, infoLogsWriter logsWriter.LogsWriter, errorLogsWriter logsWriter.LogsWriter) *GiftBuyerMonitoringImpl {
 	return &GiftBuyerMonitoringImpl{
-		api:          api,
-		notification: notification,
+		api:             api,
+		notification:    notification,
+		infoLogsWriter:  infoLogsWriter,
+		errorLogsWriter: errorLogsWriter,
 	}
 }
 
@@ -49,9 +54,12 @@ func (gm *GiftBuyerMonitoringImpl) MonitorProcess(ctx context.Context, resultsCh
 
 			if result.Success {
 				summaries[result.GiftID].Success++
+				giftServiceHelpers.LogInfo(gm.infoLogsWriter, fmt.Sprintf("Successfully purchased gift %d", result.GiftID))
 			} else if result.Err != nil {
 				errorCounts[result.Err.Error()]++
+				giftServiceHelpers.LogError(gm.errorLogsWriter, fmt.Sprintf("Failed to purchase gift %d: %v", result.GiftID, result.Err))
 			}
+
 		}
 	}
 }
@@ -101,24 +109,24 @@ func (gm *GiftBuyerMonitoringImpl) sendNotify(ctx context.Context, summaries map
 		}
 	} else {
 		if totalSuccess == totalRequested {
-			logger.GlobalLogger.Infof("✅ Successfully bought all %d gifts", totalSuccess)
+			giftServiceHelpers.LogInfo(gm.infoLogsWriter, fmt.Sprintf("✅ Successfully bought all %d gifts", totalSuccess))
 		} else if totalSuccess > 0 {
-			logger.GlobalLogger.Warnf("⚠️ Partially completed: %d/%d gifts bought", totalSuccess, totalRequested)
+			giftServiceHelpers.LogInfo(gm.infoLogsWriter, fmt.Sprintf("⚠️ Partially completed: %d/%d gifts bought", totalSuccess, totalRequested))
 		} else {
-			logger.GlobalLogger.Errorf("❌ Failed to buy any gifts out of %d requested", totalRequested)
+			giftServiceHelpers.LogError(gm.errorLogsWriter, fmt.Sprintf("❌ Failed to buy any gifts out of %d requested", totalRequested))
 		}
 
 		for _, summary := range summaries {
 			if summary.Success > 0 {
-				logger.GlobalLogger.Infof("Successfully bought %d/%d x gift %d",
-					summary.Success, summary.Requested, summary.GiftID)
+				giftServiceHelpers.LogInfo(gm.infoLogsWriter, fmt.Sprintf("Successfully bought %d/%d x gift %d",
+					summary.Success, summary.Requested, summary.GiftID))
 			} else {
-				logger.GlobalLogger.Errorf("Failed to buy %d/%d x gift %d",
-					summary.Success, summary.Requested, summary.GiftID)
+				giftServiceHelpers.LogError(gm.errorLogsWriter, fmt.Sprintf("Failed to buy %d/%d x gift %d",
+					summary.Success, summary.Requested, summary.GiftID))
 			}
 		}
 		if mostFrequentError != nil {
-			logger.GlobalLogger.Errorf("Most frequent error during purchase: %v", mostFrequentError)
+			giftServiceHelpers.LogError(gm.errorLogsWriter, fmt.Sprintf("Most frequent error during purchase: %v", mostFrequentError))
 		}
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gift-buyer/internal/config"
 	"gift-buyer/internal/infrastructure/gitVersion"
+	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/authService"
 	"gift-buyer/internal/service/authService/apiChecker"
 	"gift-buyer/internal/service/authService/sessions"
@@ -76,7 +77,9 @@ func (f *Factory) CreateSystem() (UseCase, error) {
 	}
 
 	sessionManager := sessions.NewSessionManager(&f.cfg.TgSettings)
-	authManager := authService.NewAuthManager(sessionManager, nil, &f.cfg.TgSettings)
+	infoLogsWriter := logsWriter.NewLogsWriter("info")
+	errorLogsWriter := logsWriter.NewLogsWriter("error")
+	authManager := authService.NewAuthManager(sessionManager, nil, &f.cfg.TgSettings, infoLogsWriter, errorLogsWriter)
 	api, err := authManager.InitClient(ctx)
 	if err != nil {
 		cancel()
@@ -100,17 +103,17 @@ func (f *Factory) CreateSystem() (UseCase, error) {
 	manager := giftManager.NewGiftManager(api)
 	cache := giftCache.NewGiftCache()
 	userCache := idCache.NewIDCache()
-	notification := giftNotification.NewNotification(botClient, &f.cfg.TgSettings)
-	monitor := giftMonitor.NewGiftMonitor(cache, manager, validator, notification, time.Duration(tickerInterval*1000)*time.Millisecond)
+	notification := giftNotification.NewNotification(botClient, &f.cfg.TgSettings, errorLogsWriter)
+	monitor := giftMonitor.NewGiftMonitor(cache, manager, validator, notification, time.Duration(tickerInterval*1000)*time.Millisecond, errorLogsWriter, infoLogsWriter)
 	authManager.SetMonitor(monitor)
 	rl := rateLimiter.NewRateLimiter(f.cfg.RPCRateLimit)
 	counter := atomicCounter.NewAtomicCounter(f.cfg.MaxBuyCount)
 	invoiceCreator := invoiceCreator.NewInvoiceCreator(f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, userCache)
 	paymentProcessor := paymentProcessor.NewPaymentProcessor(api, invoiceCreator, rl)
 	purchaseProcessor := purchaseProcessor.NewPurchaseProcessor(api, paymentProcessor)
-	monitorProcessor := giftBuyerMonitoring.NewGiftBuyerMonitoring(api, notification)
+	monitorProcessor := giftBuyerMonitoring.NewGiftBuyerMonitoring(api, notification, infoLogsWriter, errorLogsWriter)
 	accountManager := accountManager.NewAccountManager(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, userCache, userCache, f.cfg.MainAccountTag)
-	buyer := giftBuyer.NewGiftBuyer(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, manager, notification, f.cfg.MaxBuyCount, f.cfg.RetryCount, f.cfg.RetryDelay, userCache, f.cfg.ConcurrencyGiftCount, rl, f.cfg.ConcurrentOperations, invoiceCreator, purchaseProcessor, monitorProcessor, counter, accountManager, f.cfg.MainAccountTag)
+	buyer := giftBuyer.NewGiftBuyer(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, manager, notification, f.cfg.MaxBuyCount, f.cfg.RetryCount, f.cfg.RetryDelay, userCache, f.cfg.ConcurrencyGiftCount, rl, f.cfg.ConcurrentOperations, invoiceCreator, purchaseProcessor, monitorProcessor, counter, accountManager, f.cfg.MainAccountTag, errorLogsWriter)
 	gitVersion := gitVersion.NewGitVersionController(f.cfg.RepoOwner, f.cfg.RepoName, f.cfg.ApiLink)
 
 	updateInterval := f.cfg.UpdateTicker

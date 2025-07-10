@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"gift-buyer/internal/config"
+	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/authService/apiChecker"
 	"gift-buyer/internal/service/authService/authInterfaces"
-	"gift-buyer/pkg/logger"
 	"os"
 	"strings"
 	"sync"
@@ -17,25 +17,29 @@ import (
 )
 
 type AuthManagerImpl struct {
-	api            *tg.Client
-	botApi         *tg.Client
-	mu             sync.RWMutex
-	sessionManager authInterfaces.SessionManager
-	apiChecker     authInterfaces.ApiChecker
-	cfg            *config.TgSettings
-	reconnect      chan struct{}
-	stopCh         chan struct{}
-	wg             sync.WaitGroup
-	monitor        authInterfaces.GiftMonitorAndAuthController
+	api             *tg.Client
+	botApi          *tg.Client
+	mu              sync.RWMutex
+	sessionManager  authInterfaces.SessionManager
+	apiChecker      authInterfaces.ApiChecker
+	cfg             *config.TgSettings
+	reconnect       chan struct{}
+	stopCh          chan struct{}
+	wg              sync.WaitGroup
+	monitor         authInterfaces.GiftMonitorAndAuthController
+	infoLogsWriter  logsWriter.LogsWriter
+	errorLogsWriter logsWriter.LogsWriter
 }
 
-func NewAuthManager(sessionManager authInterfaces.SessionManager, apiChecker authInterfaces.ApiChecker, cfg *config.TgSettings) *AuthManagerImpl {
+func NewAuthManager(sessionManager authInterfaces.SessionManager, apiChecker authInterfaces.ApiChecker, cfg *config.TgSettings, infoLogsWriter logsWriter.LogsWriter, errorLogsWriter logsWriter.LogsWriter) *AuthManagerImpl {
 	return &AuthManagerImpl{
-		sessionManager: sessionManager,
-		apiChecker:     apiChecker,
-		cfg:            cfg,
-		reconnect:      make(chan struct{}, 1),
-		stopCh:         make(chan struct{}),
+		sessionManager:  sessionManager,
+		apiChecker:      apiChecker,
+		cfg:             cfg,
+		reconnect:       make(chan struct{}, 1),
+		stopCh:          make(chan struct{}),
+		infoLogsWriter:  infoLogsWriter,
+		errorLogsWriter: errorLogsWriter,
 	}
 }
 
@@ -68,11 +72,11 @@ func (f *AuthManagerImpl) InitClient(ctx context.Context) (*tg.Client, error) {
 
 func (f *AuthManagerImpl) RunApiChecker(ctx context.Context) {
 	if f.apiChecker == nil {
-		logger.GlobalLogger.Warn("API checker is nil, skipping")
+		f.logError("API checker is nil, skipping")
 		return
 	}
 
-	logger.GlobalLogger.Info("Starting API monitoring")
+	f.logInfo("Starting API monitoring")
 
 	f.wg.Add(1)
 	go func() {
@@ -83,26 +87,26 @@ func (f *AuthManagerImpl) RunApiChecker(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				logger.GlobalLogger.Info("API monitoring stopped due to context cancellation")
+				f.logInfo("API monitoring stopped due to context cancellation")
 				return
 			case <-f.stopCh:
-				logger.GlobalLogger.Info("API monitoring stopped due to stop signal")
+				f.logInfo("API monitoring stopped due to stop signal")
 				return
 			case <-ticker.C:
 				if err := f.apiChecker.Run(ctx); err != nil {
-					logger.GlobalLogger.Errorf("API check failed: %v", err)
+					f.logErrorf("API check failed: %v", err)
 					if f.isCriticalError(err) {
-						logger.GlobalLogger.Errorf("Critical API error detected, triggering reconnect: %v", err)
+						f.logErrorf("Critical API error detected, triggering reconnect: %v", err)
 						select {
 						case f.reconnect <- struct{}{}:
 							f.stopCh <- struct{}{}
-							logger.GlobalLogger.Info("Reconnect signal sent")
+							f.logInfo("Reconnect signal sent")
 						default:
-							logger.GlobalLogger.Warn("Reconnect channel is full")
+							f.logError("Reconnect channel is full")
 						}
 					}
 				} else {
-					logger.GlobalLogger.Debug("API check successful")
+					f.logInfo("API check successful")
 				}
 			}
 		}
@@ -131,32 +135,32 @@ func (f *AuthManagerImpl) handleReconnectSignals(ctx context.Context) {
 	for {
 		select {
 		case <-f.reconnect:
-			logger.GlobalLogger.Info("Processing reconnect signal")
+			f.logInfo("Processing reconnect signal")
 
 			if f.monitor != nil {
-				logger.GlobalLogger.Info("Pausing gift monitoring during reconnection")
+				f.logInfo("Pausing gift monitoring during reconnection")
 				f.monitor.Pause()
 			}
 
 			if _, err := f.Reconnect(ctx); err != nil {
-				logger.GlobalLogger.Errorf("Reconnect failed: %v", err)
+				f.logErrorf("Reconnect failed: %v", err)
 				if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "deadline") {
-					logger.GlobalLogger.Error("Reconnection timeout, exiting program")
+					f.logError("Reconnection timeout, exiting program")
 					os.Exit(1)
 				}
 			} else {
 				if f.monitor != nil {
-					logger.GlobalLogger.Info("Resuming gift monitoring after reconnection")
+					f.logInfo("Resuming gift monitoring after reconnection")
 					f.monitor.Resume()
 				}
 				<-f.stopCh
-				logger.GlobalLogger.Info("Reconnection completed successfully")
+				f.logInfo("Reconnection completed successfully")
 			}
 		case <-f.stopCh:
-			logger.GlobalLogger.Info("Stopping reconnect handler")
+			f.logInfo("Stopping reconnect handler")
 			return
 		case <-ctx.Done():
-			logger.GlobalLogger.Info("Context cancelled, stopping reconnect handler")
+			f.logInfo("Context cancelled, stopping reconnect handler")
 			return
 		}
 	}
@@ -190,7 +194,7 @@ func (f *AuthManagerImpl) GetApi() *tg.Client {
 }
 
 func (f *AuthManagerImpl) Reconnect(ctx context.Context) (*tg.Client, error) {
-	logger.GlobalLogger.Info("Starting reconnection process")
+	f.logInfo("Starting reconnection process")
 
 	tgc, err := f.InitClient(ctx)
 	if err != nil {
@@ -200,15 +204,15 @@ func (f *AuthManagerImpl) Reconnect(ctx context.Context) (*tg.Client, error) {
 	if f.apiChecker != nil {
 		newApiChecker := apiChecker.NewApiChecker(tgc, time.NewTicker(2*time.Second))
 		f.SetApiChecker(newApiChecker)
-		// logger.GlobalLogger.Info("API checker updated with new client")
+		f.logInfo("API checker updated with new client")
 	}
 
-	logger.GlobalLogger.Info("Reconnection successful")
+	f.logInfo("Reconnection successful")
 	return tgc, nil
 }
 
 func (f *AuthManagerImpl) Stop() {
-	logger.GlobalLogger.Info("Stopping AuthManager...")
+	f.logInfo("Stopping AuthManager...")
 
 	close(f.stopCh)
 
@@ -220,7 +224,7 @@ func (f *AuthManagerImpl) Stop() {
 
 	f.wg.Wait()
 
-	logger.GlobalLogger.Info("AuthManager stopped")
+	f.logInfo("AuthManager stopped")
 }
 
 func (f *AuthManagerImpl) SetApiChecker(apiChecker authInterfaces.ApiChecker) {
@@ -233,5 +237,5 @@ func (f *AuthManagerImpl) SetMonitor(monitor authInterfaces.GiftMonitorAndAuthCo
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.monitor = monitor
-	logger.GlobalLogger.Info("Gift monitor set for auth manager")
+	f.logInfo("Gift monitor set for auth manager")
 }

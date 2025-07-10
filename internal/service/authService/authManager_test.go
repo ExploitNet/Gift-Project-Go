@@ -5,11 +5,19 @@ import (
 	"testing"
 
 	"gift-buyer/internal/config"
+	"gift-buyer/internal/infrastructure/logsWriter/logTypes"
 
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/tg"
 	"github.com/stretchr/testify/assert"
 )
+
+// MockLogsWriter для тестирования
+type MockLogsWriter struct{}
+
+func (m *MockLogsWriter) Write(entry *logTypes.LogEntry) error {
+	return nil
+}
 
 func TestNewAuthManager(t *testing.T) {
 	sessionManager := &MockSessionManager{}
@@ -20,8 +28,10 @@ func TestNewAuthManager(t *testing.T) {
 		Phone:    "+1234567890",
 		Password: "test_password",
 	}
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
 
-	authManager := NewAuthManager(sessionManager, apiChecker, tgSettings)
+	authManager := NewAuthManager(sessionManager, apiChecker, tgSettings, mockInfoWriter, mockErrorWriter)
 
 	assert.NotNil(t, authManager)
 	assert.Equal(t, sessionManager, authManager.sessionManager)
@@ -30,8 +40,11 @@ func TestNewAuthManager(t *testing.T) {
 }
 
 func TestNewAuthManager_NilDependencies(t *testing.T) {
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
+
 	// Test with nil session manager
-	authManager := NewAuthManager(nil, nil, nil)
+	authManager := NewAuthManager(nil, nil, nil, mockInfoWriter, mockErrorWriter)
 	assert.NotNil(t, authManager)
 
 	assert.Nil(t, authManager.sessionManager)
@@ -46,8 +59,10 @@ func TestAuthManagerImpl_SetApiChecker(t *testing.T) {
 		ApiHash: "test_hash",
 		Phone:   "+1234567890",
 	}
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
 
-	authManager := NewAuthManager(sessionManager, nil, tgSettings)
+	authManager := NewAuthManager(sessionManager, nil, tgSettings, mockInfoWriter, mockErrorWriter)
 
 	// Initially should be nil
 	assert.Nil(t, authManager.apiChecker)
@@ -67,8 +82,10 @@ func TestAuthManagerImpl_SetMonitor(t *testing.T) {
 		ApiHash: "test_hash",
 		Phone:   "+1234567890",
 	}
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
 
-	authManager := NewAuthManager(sessionManager, nil, tgSettings)
+	authManager := NewAuthManager(sessionManager, nil, tgSettings, mockInfoWriter, mockErrorWriter)
 
 	// Initially should be nil
 	assert.Nil(t, authManager.monitor)
@@ -82,7 +99,10 @@ func TestAuthManagerImpl_SetMonitor(t *testing.T) {
 }
 
 func TestAuthManagerImpl_InitClient_NilSettings(t *testing.T) {
-	authManager := NewAuthManager(nil, nil, nil)
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
+
+	authManager := NewAuthManager(nil, nil, nil, mockInfoWriter, mockErrorWriter)
 
 	ctx := context.Background()
 
@@ -95,7 +115,10 @@ func TestAuthManagerImpl_InitClient_NilSettings(t *testing.T) {
 }
 
 func TestAuthManagerImpl_InitBotClient_NilSettings(t *testing.T) {
-	authManager := NewAuthManager(nil, nil, nil)
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
+
+	authManager := NewAuthManager(nil, nil, nil, mockInfoWriter, mockErrorWriter)
 
 	ctx := context.Background()
 	client, err := authManager.InitBotClient(ctx)
@@ -111,8 +134,10 @@ func TestAuthManagerImpl_InitBotClient_NilSessionManager(t *testing.T) {
 		Phone:    "+1234567890",
 		TgBotKey: "test_bot_key",
 	}
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
 
-	authManager := NewAuthManager(nil, nil, tgSettings)
+	authManager := NewAuthManager(nil, nil, tgSettings, mockInfoWriter, mockErrorWriter)
 
 	ctx := context.Background()
 	client, err := authManager.InitBotClient(ctx)
@@ -128,8 +153,10 @@ func TestAuthManagerImpl_RunApiChecker_NilApiChecker(t *testing.T) {
 		ApiHash: "test_hash",
 		Phone:   "+1234567890",
 	}
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
 
-	authManager := NewAuthManager(sessionManager, nil, tgSettings)
+	authManager := NewAuthManager(sessionManager, nil, tgSettings, mockInfoWriter, mockErrorWriter)
 
 	ctx := context.Background()
 
@@ -147,8 +174,10 @@ func TestAuthManagerImpl_RunApiChecker_WithApiChecker(t *testing.T) {
 		ApiHash: "test_hash",
 		Phone:   "+1234567890",
 	}
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
 
-	authManager := NewAuthManager(sessionManager, apiChecker, tgSettings)
+	authManager := NewAuthManager(sessionManager, apiChecker, tgSettings, mockInfoWriter, mockErrorWriter)
 
 	ctx := context.Background()
 
@@ -159,7 +188,10 @@ func TestAuthManagerImpl_RunApiChecker_WithApiChecker(t *testing.T) {
 }
 
 func TestAuthManagerImpl_GetApi(t *testing.T) {
-	authManager := NewAuthManager(nil, nil, nil)
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
+
+	authManager := NewAuthManager(nil, nil, nil, mockInfoWriter, mockErrorWriter)
 
 	// Initially should be nil
 	api := authManager.GetApi()
@@ -167,7 +199,10 @@ func TestAuthManagerImpl_GetApi(t *testing.T) {
 }
 
 func TestAuthManagerImpl_GetBotApi(t *testing.T) {
-	authManager := NewAuthManager(nil, nil, nil)
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
+
+	authManager := NewAuthManager(nil, nil, nil, mockInfoWriter, mockErrorWriter)
 
 	// Initially should be nil
 	botApi := authManager.GetBotApi()
@@ -175,7 +210,10 @@ func TestAuthManagerImpl_GetBotApi(t *testing.T) {
 }
 
 func TestAuthManagerImpl_Stop(t *testing.T) {
-	authManager := NewAuthManager(nil, nil, nil)
+	mockInfoWriter := &MockLogsWriter{}
+	mockErrorWriter := &MockLogsWriter{}
+
+	authManager := NewAuthManager(nil, nil, nil, mockInfoWriter, mockErrorWriter)
 
 	// Should not panic
 	assert.NotPanics(t, func() {

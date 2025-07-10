@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"gift-buyer/internal/infrastructure/logsWriter/logTypes"
 	"gift-buyer/internal/service/giftService/giftTypes"
 
 	"github.com/gotd/td/tg"
@@ -104,14 +105,23 @@ func (m *MockNotificationService) SendUpdateNotification(ctx context.Context, ve
 	return args.Error(0)
 }
 
+// MockLogsWriter для тестирования
+type MockLogsWriter struct{}
+
+func (m *MockLogsWriter) Write(entry *logTypes.LogEntry) error {
+	return nil
+}
+
 func TestNewGiftMonitor(t *testing.T) {
 	mockCache := new(MockGiftCache)
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 	tickTime := time.Second
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, tickTime)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, tickTime, mockErrorWriter, mockInfoWriter)
 
 	assert.NotNil(t, monitor)
 
@@ -128,8 +138,10 @@ func TestGiftMonitor_Start_FirstRun(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10, mockErrorWriter, mockInfoWriter)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
 	defer cancel()
 
@@ -173,15 +185,19 @@ func TestGiftMonitor_Start_SecondRunWithNewGifts(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
 	// Create monitor and skip first run manually
 	gm := &giftMonitorImpl{
-		cache:        mockCache,
-		manager:      mockManager,
-		validator:    mockValidator,
-		notification: mockNotification,
-		ticker:       time.NewTicker(time.Millisecond * 10),
-		firstRun:     false, // Skip first run
+		cache:           mockCache,
+		manager:         mockManager,
+		validator:       mockValidator,
+		notification:    mockNotification,
+		ticker:          time.NewTicker(time.Millisecond * 10),
+		firstRun:        false, // Skip first run
+		errorLogsWriter: mockErrorWriter,
+		infoLogsWriter:  mockInfoWriter,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
@@ -220,8 +236,10 @@ func TestGiftMonitor_Start_ContextCancelled(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
@@ -237,8 +255,10 @@ func TestGiftMonitor_Start_NoNewGifts(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10, mockErrorWriter, mockInfoWriter)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
 	defer cancel()
 
@@ -265,14 +285,18 @@ func TestGiftMonitor_CheckForNewGifts_Success(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
 	monitor := &giftMonitorImpl{
-		cache:        mockCache,
-		manager:      mockManager,
-		validator:    mockValidator,
-		notification: mockNotification,
-		ticker:       time.NewTicker(time.Second),
-		firstRun:     false,
+		cache:           mockCache,
+		manager:         mockManager,
+		validator:       mockValidator,
+		notification:    mockNotification,
+		ticker:          time.NewTicker(time.Second),
+		firstRun:        false,
+		errorLogsWriter: mockErrorWriter,
+		infoLogsWriter:  mockInfoWriter,
 	}
 
 	ctx := context.Background()
@@ -308,14 +332,18 @@ func TestGiftMonitor_CheckForNewGifts_ManagerError(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
 	monitor := &giftMonitorImpl{
-		cache:        mockCache,
-		manager:      mockManager,
-		validator:    mockValidator,
-		notification: mockNotification,
-		ticker:       time.NewTicker(time.Second),
-		firstRun:     false,
+		cache:           mockCache,
+		manager:         mockManager,
+		validator:       mockValidator,
+		notification:    mockNotification,
+		ticker:          time.NewTicker(time.Second),
+		firstRun:        false,
+		errorLogsWriter: mockErrorWriter,
+		infoLogsWriter:  mockInfoWriter,
 	}
 
 	ctx := context.Background()
@@ -337,14 +365,18 @@ func TestGiftMonitor_CheckForNewGifts_ExistingGifts(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
 	monitor := &giftMonitorImpl{
-		cache:        mockCache,
-		manager:      mockManager,
-		validator:    mockValidator,
-		notification: mockNotification,
-		ticker:       time.NewTicker(time.Second),
-		firstRun:     false,
+		cache:           mockCache,
+		manager:         mockManager,
+		validator:       mockValidator,
+		notification:    mockNotification,
+		ticker:          time.NewTicker(time.Second),
+		firstRun:        false,
+		errorLogsWriter: mockErrorWriter,
+		infoLogsWriter:  mockInfoWriter,
 	}
 
 	ctx := context.Background()
@@ -372,14 +404,18 @@ func TestGiftMonitor_CheckForNewGifts_NotEligible(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
 	monitor := &giftMonitorImpl{
-		cache:        mockCache,
-		manager:      mockManager,
-		validator:    mockValidator,
-		notification: mockNotification,
-		ticker:       time.NewTicker(time.Second),
-		firstRun:     false,
+		cache:           mockCache,
+		manager:         mockManager,
+		validator:       mockValidator,
+		notification:    mockNotification,
+		ticker:          time.NewTicker(time.Second),
+		firstRun:        false,
+		errorLogsWriter: mockErrorWriter,
+		infoLogsWriter:  mockInfoWriter,
 	}
 
 	ctx := context.Background()
@@ -409,8 +445,10 @@ func TestGiftMonitor_PauseResumeIsPaused(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter)
 
 	// Initially should not be paused
 	assert.False(t, monitor.IsPaused())
@@ -437,16 +475,20 @@ func TestGiftMonitor_Start_WithPause(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
 	// Create monitor and skip first run manually
 	gm := &giftMonitorImpl{
-		cache:        mockCache,
-		manager:      mockManager,
-		validator:    mockValidator,
-		notification: mockNotification,
-		ticker:       time.NewTicker(time.Millisecond * 10),
-		firstRun:     false, // Skip first run
-		paused:       true,  // Start paused
+		cache:           mockCache,
+		manager:         mockManager,
+		validator:       mockValidator,
+		notification:    mockNotification,
+		ticker:          time.NewTicker(time.Millisecond * 10),
+		firstRun:        false, // Skip first run
+		paused:          true,  // Start paused
+		errorLogsWriter: mockErrorWriter,
+		infoLogsWriter:  mockInfoWriter,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
@@ -472,8 +514,10 @@ func TestGiftMonitor_ConcurrentPauseResume(t *testing.T) {
 	mockManager := new(MockGiftManager)
 	mockValidator := new(MockGiftValidator)
 	mockNotification := new(MockNotificationService)
+	mockErrorWriter := &MockLogsWriter{}
+	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter)
 
 	// Test concurrent access to pause/resume methods
 	var wg sync.WaitGroup

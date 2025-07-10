@@ -2,6 +2,7 @@ package giftBuyer
 
 import (
 	"context"
+	"gift-buyer/internal/infrastructure/logsWriter/logTypes"
 	"gift-buyer/internal/service/giftService/giftBuyer/atomicCounter"
 	"gift-buyer/internal/service/giftService/giftTypes"
 	"sync"
@@ -201,6 +202,7 @@ func TestNewGiftBuyer(t *testing.T) {
 		mockMonitorProcessor := &MockMonitorProcessor{}
 		mockAccountManager := &MockAccountManager{}
 		mockCounter := atomicCounter.NewAtomicCounter(100)
+		mockLogsWriter := &MockLogsWriter{}
 
 		buyer := NewGiftBuyer(
 			nil, // api
@@ -221,6 +223,7 @@ func TestNewGiftBuyer(t *testing.T) {
 			mockCounter,
 			mockAccountManager,
 			"test_user", // usertag
+			mockLogsWriter,
 		)
 
 		assert.NotNil(t, buyer)
@@ -420,4 +423,10 @@ func TestGiftBuyerImpl_MaxBuyCountLimit(t *testing.T) {
 
 		mockMonitorProcessor.AssertCalled(t, "MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 	})
+}
+
+type MockLogsWriter struct{}
+
+func (m *MockLogsWriter) Write(entry *logTypes.LogEntry) error {
+	return nil
 }
