@@ -242,8 +242,6 @@ type RateLimiter interface {
 
 type AccountManager interface {
 	SetIds(ctx context.Context) error
-	CheckSubscription(usertag string) bool
-	ValidateSubscription(usertag string) bool
 }
 
 // InvoiceCreator defines the interface for creating invoices for gift purchases.

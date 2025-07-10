@@ -6,8 +6,6 @@ import (
 	"gift-buyer/internal/infrastructure/gitVersion/gitInterfaces"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
 	"gift-buyer/pkg/logger"
-	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -29,8 +27,6 @@ type UseCase interface {
 
 	// CheckForUpdates checks for updates and sends a notification if available
 	CheckForUpdates()
-
-	CheckSubscription(usertag string)
 }
 
 // useCaseImpl implements the UseCase interface and orchestrates all gift buying operations.
@@ -143,11 +139,6 @@ func (tc *useCaseImpl) Start() {
 			tc.wg.Wait()
 			return
 		default:
-			if !tc.subFlag {
-				tc.notification.SendErrorNotification(context.Background(), fmt.Errorf("верните проверку подписки. Завершение работы программы"))
-				os.Exit(0)
-			}
-
 			newGifts, err := tc.monitor.Start(tc.ctx)
 			if err != nil {
 				if tc.ctx.Err() != nil {
@@ -241,26 +232,4 @@ func (tc *useCaseImpl) checkNewUpdates() error {
 		tc.lastNotificationVersion = remoteVersion.TagName
 	}
 	return nil
-}
-
-func (tc *useCaseImpl) CheckSubscription(usertag string) {
-	if strings.TrimSpace(usertag) == "" {
-		logger.GlobalLogger.Errorf("не указан тег аккаунта, с которого оформлена подписка на канал.")
-		os.Exit(0)
-	}
-	tc.subFlag = true
-	if !tc.accountManager.ValidateSubscription(usertag) {
-		tc.notification.SendErrorNotification(context.Background(), fmt.Errorf("%s не подписан на канал. Завершение работы программы", usertag))
-		os.Exit(0)
-	}
-
-	tick := time.NewTicker(time.Duration(1) * time.Hour)
-	defer tick.Stop()
-
-	for range tick.C {
-		if !tc.accountManager.ValidateSubscription(usertag) {
-			tc.notification.SendErrorNotification(context.Background(), fmt.Errorf("%s не подписан на канал. Завершение работы программы", usertag))
-			os.Exit(0)
-		}
-	}
 }

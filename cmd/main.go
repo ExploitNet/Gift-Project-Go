@@ -53,10 +53,6 @@ func main() {
 	}
 
 	go func() {
-		service.CheckSubscription(cfg.SoftConfig.MainAccountTag)
-	}()
-
-	go func() {
 		logger.GlobalLogger.Info("Starting gift service...")
 		service.Start()
 	}()

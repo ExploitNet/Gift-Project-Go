@@ -10,7 +10,6 @@ import (
 	"gift-buyer/internal/service/giftService/giftInterfaces"
 	"gift-buyer/internal/service/giftService/giftServiceHelpers"
 	"gift-buyer/internal/service/giftService/giftTypes"
-	"gift-buyer/pkg/errors"
 
 	"sync"
 	"time"
@@ -169,10 +168,10 @@ func (gm *giftMonitorImpl) checkForNewGifts(ctx context.Context) (map[*tg.StarGi
 		gm.cache.SetGift(gift.ID, gift)
 	}
 
-	if gm.firstRun {
-		gm.firstRun = false
-		return nil, errors.Wrap(errors.New("first run"), "touch grass")
-	}
+	// if gm.firstRun {
+	// 	gm.firstRun = false
+	// 	return nil, errors.Wrap(errors.New("first run"), "touch grass")
+	// }
 
 	return newValidGifts, nil
 }

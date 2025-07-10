@@ -4,7 +4,6 @@ package accountManager
 import (
 	"context"
 	"fmt"
-	"gift-buyer/internal/service/giftService/accountManager/implement"
 	"gift-buyer/pkg/errors"
 	"gift-buyer/pkg/logger"
 	"strings"
@@ -14,22 +13,18 @@ import (
 
 type accountManagerImpl struct {
 	api                     *tg.Client
-	mainName                string
-	validator               implement.ValidatorClient
 	usernames, channelNames []string
 	userCache               UserCache
 	channelCache            ChannelCache
 }
 
-func NewAccountManager(api *tg.Client, usernames, channelNames []string, userCache UserCache, channelCache ChannelCache, mainName string) *accountManagerImpl {
+func NewAccountManager(api *tg.Client, usernames, channelNames []string, userCache UserCache, channelCache ChannelCache) *accountManagerImpl {
 	return &accountManagerImpl{
 		api:          api,
 		usernames:    usernames,
 		channelNames: channelNames,
 		userCache:    userCache,
 		channelCache: channelCache,
-		mainName:     mainName,
-		validator:    implement.CreateValidatorService(),
 	}
 }
 
@@ -120,30 +115,4 @@ func (am *accountManagerImpl) loadSingleChannel(ctx context.Context, channelName
 	}
 
 	return nil, errors.New(fmt.Sprintf("channel %s not found in response", channelName))
-}
-
-// CheckSubscription verifies whether a user is currently subscribed based on their tag.
-// Returns true if the subscription is active; false otherwise.
-// This method is typically used to determine access eligibility in the application.
-func (am *accountManagerImpl) CheckSubscription(usertag string) bool {
-	res, err := am.validator.CheckSubscription(context.Background(), &implement.Request{Data: usertag})
-	if err != nil {
-		return false
-	}
-
-	return res.Status
-}
-
-// ValidateSubscription performs a local check to determine if a user has an active subscription.
-// It takes a user tag as input and returns true if the subscription is considered valid.
-// If the check fails or an error occurs, it returns false and logs the reason internally.
-// This function is used to control access to specific features or content.
-func (am *accountManagerImpl) ValidateSubscription(usertag string) bool {
-	res, err := am.validator.ValidateSubscription(context.Background(), &implement.Request{Data: usertag})
-	if err != nil {
-		logger.GlobalLogger.Errorf("failed to validate subscription: %v", err)
-		return false
-	}
-	logger.GlobalLogger.Infof("subscription validated: %v", res.Status)
-	return res.Status
 }

@@ -112,8 +112,8 @@ func (f *Factory) CreateSystem() (UseCase, error) {
 	paymentProcessor := paymentProcessor.NewPaymentProcessor(api, invoiceCreator, rl)
 	purchaseProcessor := purchaseProcessor.NewPurchaseProcessor(api, paymentProcessor)
 	monitorProcessor := giftBuyerMonitoring.NewGiftBuyerMonitoring(api, notification, infoLogsWriter, errorLogsWriter)
-	accountManager := accountManager.NewAccountManager(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, userCache, userCache, f.cfg.MainAccountTag)
-	buyer := giftBuyer.NewGiftBuyer(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, manager, notification, f.cfg.MaxBuyCount, f.cfg.RetryCount, f.cfg.RetryDelay, userCache, f.cfg.ConcurrencyGiftCount, rl, f.cfg.ConcurrentOperations, invoiceCreator, purchaseProcessor, monitorProcessor, counter, accountManager, f.cfg.MainAccountTag, errorLogsWriter)
+	accountManager := accountManager.NewAccountManager(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, userCache, userCache)
+	buyer := giftBuyer.NewGiftBuyer(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, manager, notification, f.cfg.MaxBuyCount, f.cfg.RetryCount, f.cfg.RetryDelay, userCache, f.cfg.ConcurrencyGiftCount, rl, f.cfg.ConcurrentOperations, invoiceCreator, purchaseProcessor, monitorProcessor, counter, errorLogsWriter)
 	gitVersion := gitVersion.NewGitVersionController(f.cfg.RepoOwner, f.cfg.RepoName, f.cfg.ApiLink)
 
 	updateInterval := f.cfg.UpdateTicker

@@ -5,10 +5,8 @@ package giftBuyer
 
 import (
 	"context"
-	"fmt"
 	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
-	"gift-buyer/internal/service/giftService/giftServiceHelpers"
 	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
 	"sync"
@@ -54,8 +52,6 @@ type giftBuyerImpl struct {
 
 	purchaseProcessor giftInterfaces.PurchaseProcessor
 	monitorProcessor  giftInterfaces.MonitorProcessor
-	accountManager    giftInterfaces.AccountManager
-	usertag           string
 }
 
 // NewGiftBuyer creates a new GiftBuyer instance with the specified configuration.
@@ -90,8 +86,6 @@ func NewGiftBuyer(
 	purchaseProcessor giftInterfaces.PurchaseProcessor,
 	monitorProcessor giftInterfaces.MonitorProcessor,
 	counter giftInterfaces.Counter,
-	accountManager giftInterfaces.AccountManager,
-	usetag string,
 	errorLogsWriter logsWriter.LogsWriter,
 ) *giftBuyerImpl {
 	return &giftBuyerImpl{
@@ -111,7 +105,6 @@ func NewGiftBuyer(
 		invoiceCreator:       invoiceCreator,
 		purchaseProcessor:    purchaseProcessor,
 		monitorProcessor:     monitorProcessor,
-		accountManager:       accountManager,
 		errorLogsWriter:      errorLogsWriter,
 	}
 }
@@ -141,15 +134,6 @@ func (gm *giftBuyerImpl) BuyGift(ctx context.Context, gifts map[*tg.StarGift]*gi
 	)
 
 	go gm.monitorProcessor.MonitorProcess(ctx, resultsCh, doneCh, gifts)
-
-	if !gm.accountManager.CheckSubscription(gm.usertag) {
-		giftServiceHelpers.LogError(gm.errorLogsWriter, fmt.Sprintf("❌ Subscription check FAILED for user: %s, aborting purchase", gm.usertag))
-		resultsCh <- giftTypes.GiftResult{
-			GiftID:  0,
-			Success: false,
-			Err:     errors.New("subscription check failed"),
-		}
-	}
 
 	for gift, require := range gifts {
 		wg.Add(1)

@@ -200,7 +200,6 @@ func TestNewGiftBuyer(t *testing.T) {
 		mockInvoiceCreator := &MockInvoiceCreator{}
 		mockPurchaseProcessor := &MockPurchaseProcessor{}
 		mockMonitorProcessor := &MockMonitorProcessor{}
-		mockAccountManager := &MockAccountManager{}
 		mockCounter := atomicCounter.NewAtomicCounter(100)
 		mockLogsWriter := &MockLogsWriter{}
 
@@ -221,8 +220,6 @@ func TestNewGiftBuyer(t *testing.T) {
 			mockPurchaseProcessor,
 			mockMonitorProcessor,
 			mockCounter,
-			mockAccountManager,
-			"test_user", // usertag
 			mockLogsWriter,
 		)
 

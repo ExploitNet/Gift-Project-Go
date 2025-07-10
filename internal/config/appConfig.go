@@ -16,7 +16,6 @@ type AppConfig struct {
 // SoftConfig contains the core operational configuration for the gift buying system.
 // It includes Telegram settings, purchase criteria, and operational limits.
 type SoftConfig struct {
-	MainAccountTag string `json:"subscribe_tag"`
 	// UpdateTicker is the interval for checking for updates
 	UpdateTicker float64 `json:"update_ticker"`
 
