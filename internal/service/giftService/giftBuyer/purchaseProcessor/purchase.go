@@ -37,9 +37,9 @@ func NewPurchaseProcessor(api *tg.Client, paymentProcessor giftInterfaces.Paymen
 // Returns:
 //   - error: payment processing error or API communication failure
 func (pp *PurchaseProcessorImpl) PurchaseGift(ctx context.Context, gift *tg.StarGift, receiverTypes []int) error {
-	// if !pp.validatePurchase(gift) {
-	// 	return errors.New("insufficient balance to buy gift")
-	// }
+	if !pp.validatePurchase(gift) {
+		return errors.New("insufficient balance to buy gift")
+	}
 
 	paymentForm, invoice, err := pp.paymentProcessor.CreatePaymentForm(ctx, gift, receiverTypes)
 	if err != nil {
