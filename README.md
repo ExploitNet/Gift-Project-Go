@@ -113,13 +113,29 @@ cp internal/config/config_example.json internal/config/config.json
 - **`retry_count`** — количество попыток при ошибках
 - **`rpc_rate_limit`** — лимит RPC запросов в секунду
 
+### ⚙️ Параметры подарков
+
+```json
+{
+    "gift_param": {
+        "total_star_cap": 1000000000000,
+        "limited_status": true,
+        "release_by": false,
+        "test_mode": false
+    }
+}
+```
+
+- **`total_star_cap`** — максимальное количество звезд для покупки всех подарков
+- **`limited_status`** — покупать только ограниченные (true) или неограниченные (false) подарки
+- **`release_by`** — проверять наличие информации о релизере подарка
+- **`test_mode`** — тестовый режим, отключает проверки лимитов
+
 ### 🔒 Глобальные ограничения
 
 ```json
 {
-    "total_star_cap": 1000000000000,
-    "max_buy_count": 100,
-    "limited_status": true
+    "max_buy_count": 100
 }
 ```
 
@@ -265,13 +281,29 @@ Edit `config.json` with your data (see [Configuration](#️-configuration-1)).
 - **`retry_count`** — number of retry attempts on errors
 - **`rpc_rate_limit`** — RPC requests limit per second
 
+### ⚙️ Gift Parameters
+
+```json
+{
+    "gift_param": {
+        "total_star_cap": 1000000000000,
+        "limited_status": true,
+        "release_by": false,
+        "test_mode": false
+    }
+}
+```
+
+- **`total_star_cap`** — maximum stars for purchasing all gifts
+- **`limited_status`** — buy only limited (true) or unlimited (false) gifts
+- **`release_by`** — check for gift releaser information
+- **`test_mode`** — test mode, disables limit validations
+
 ### 🔒 Global Limits
 
 ```json
 {
-    "total_star_cap": 1000000000000,
-    "max_buy_count": 100,
-    "limited_status": true
+    "max_buy_count": 100
 }
 ```
 
