@@ -57,8 +57,8 @@ type MockUserCache struct {
 	mock.Mock
 }
 
-func (m *MockUserCache) SetUser(user *tg.User) {
-	m.Called(user)
+func (m *MockUserCache) SetUser(key string, user *tg.User) {
+	m.Called(key, user)
 }
 
 func (m *MockUserCache) GetUser(id string) (*tg.User, error) {
@@ -69,8 +69,8 @@ func (m *MockUserCache) GetUser(id string) (*tg.User, error) {
 	return args.Get(0).(*tg.User), args.Error(1)
 }
 
-func (m *MockUserCache) SetChannel(channel *tg.Channel) {
-	m.Called(channel)
+func (m *MockUserCache) SetChannel(key string, channel *tg.Channel) {
+	m.Called(key, channel)
 }
 
 func (m *MockUserCache) GetChannel(id string) (*tg.Channel, error) {

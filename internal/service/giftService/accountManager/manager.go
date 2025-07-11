@@ -64,7 +64,7 @@ func (am *accountManagerImpl) loadUsersToCache(ctx context.Context) error {
 		}
 		for _, user := range res.Users {
 			if u, ok := user.(*tg.User); ok {
-				am.userCache.SetUser(u)
+				am.userCache.SetUser(withoutTag, u)
 			}
 		}
 	}
@@ -86,7 +86,7 @@ func (am *accountManagerImpl) loadChannelsToCache(ctx context.Context) error {
 			continue
 		}
 
-		am.channelCache.SetChannel(channel)
+		am.channelCache.SetChannel(withoutTag, channel)
 		cachedCount++
 	}
 
@@ -109,7 +109,7 @@ func (am *accountManagerImpl) loadSingleChannel(ctx context.Context, channelName
 	}
 	for _, channel := range res.Chats {
 		if c, ok := channel.(*tg.Channel); ok {
-			am.channelCache.SetChannel(c)
+			am.channelCache.SetChannel(channelName, c)
 			return c, nil
 		}
 	}

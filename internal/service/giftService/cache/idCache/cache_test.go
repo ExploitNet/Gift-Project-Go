@@ -29,7 +29,7 @@ func TestIDCacheImpl_SetAndGetUser(t *testing.T) {
 	}
 
 	// Set user
-	cache.SetUser(user)
+	cache.SetUser("testuser", user)
 
 	// Get user
 	retrievedUser, err := cache.GetUser("testuser")
@@ -60,7 +60,7 @@ func TestIDCacheImpl_SetAndGetChannel(t *testing.T) {
 	}
 
 	// Set channel
-	cache.SetChannel(channel)
+	cache.SetChannel("testchannel", channel)
 
 	// Get channel by username
 	retrievedChannel, err := cache.GetChannel("testchannel")
@@ -85,7 +85,7 @@ func TestIDCacheImpl_SetNilUser(t *testing.T) {
 
 	// Should not panic with nil user
 	assert.NotPanics(t, func() {
-		cache.SetUser(nil)
+		cache.SetUser("testkey", nil)
 	})
 }
 
@@ -94,7 +94,7 @@ func TestIDCacheImpl_SetNilChannel(t *testing.T) {
 
 	// Should not panic with nil channel
 	assert.NotPanics(t, func() {
-		cache.SetChannel(nil)
+		cache.SetChannel("testkey", nil)
 	})
 }
 
@@ -116,10 +116,10 @@ func TestIDCacheImpl_OverwriteUser(t *testing.T) {
 	}
 
 	// Set first user
-	cache.SetUser(user1)
+	cache.SetUser("testuser", user1)
 
 	// Overwrite with second user
-	cache.SetUser(user2)
+	cache.SetUser("testuser", user2)
 
 	// Should get the second user
 	retrievedUser, err := cache.GetUser("testuser")
@@ -143,10 +143,10 @@ func TestIDCacheImpl_OverwriteChannel(t *testing.T) {
 	}
 
 	// Set first channel
-	cache.SetChannel(channel1)
+	cache.SetChannel("testchannel", channel1)
 
 	// Overwrite with second channel
-	cache.SetChannel(channel2)
+	cache.SetChannel("testchannel", channel2)
 
 	// Should get the second channel
 	retrievedChannel, err := cache.GetChannel("testchannel")
@@ -165,7 +165,7 @@ func TestIDCacheImpl_MultipleUsers(t *testing.T) {
 
 	// Set multiple users
 	for _, user := range users {
-		cache.SetUser(user)
+		cache.SetUser(user.Username, user)
 	}
 
 	// Get all users
@@ -187,7 +187,7 @@ func TestIDCacheImpl_MultipleChannels(t *testing.T) {
 
 	// Set multiple channels
 	for _, channel := range channels {
-		cache.SetChannel(channel)
+		cache.SetChannel(channel.Username, channel)
 	}
 
 	// Get all channels

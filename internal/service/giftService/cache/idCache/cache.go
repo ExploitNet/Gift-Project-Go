@@ -20,38 +20,38 @@ func NewIDCache() *idCacheImpl {
 	}
 }
 
-func (c *idCacheImpl) SetUser(user *tg.User) {
+func (c *idCacheImpl) SetUser(key string, user *tg.User) {
 	if user == nil {
 		return
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.users[user.Username] = user
+	c.users[key] = user
 }
 
-func (c *idCacheImpl) GetUser(username string) (*tg.User, error) {
+func (c *idCacheImpl) GetUser(key string) (*tg.User, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	user, ok := c.users[username]
+	user, ok := c.users[key]
 	if !ok {
 		return nil, errors.New("user not found")
 	}
 	return user, nil
 }
 
-func (c *idCacheImpl) SetChannel(channel *tg.Channel) {
+func (c *idCacheImpl) SetChannel(key string, channel *tg.Channel) {
 	if channel == nil {
 		return
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.channels[channel.Username] = channel
+	c.channels[key] = channel
 }
 
-func (c *idCacheImpl) GetChannel(channelName string) (*tg.Channel, error) {
+func (c *idCacheImpl) GetChannel(key string) (*tg.Channel, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	channel, ok := c.channels[channelName]
+	channel, ok := c.channels[key]
 	if !ok {
 		return nil, errors.New("channel not found")
 	}

@@ -131,7 +131,7 @@ func TestAccountManager_LoadChannelsToCache_NilAPI(t *testing.T) {
 
 type MockUserCache struct{}
 
-func (m *MockUserCache) SetUser(user *tg.User) {
+func (m *MockUserCache) SetUser(key string, user *tg.User) {
 	// Mock implementation
 }
 
@@ -141,7 +141,7 @@ func (m *MockUserCache) GetUser(id string) (*tg.User, error) {
 
 type MockChannelCache struct{}
 
-func (m *MockChannelCache) SetChannel(channel *tg.Channel) {
+func (m *MockChannelCache) SetChannel(key string, channel *tg.Channel) {
 	// Mock implementation
 }
 

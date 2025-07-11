@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
 	"gift-buyer/pkg/errors"
+	"gift-buyer/pkg/logger"
 	"gift-buyer/pkg/utils"
 	"math/rand"
 	"time"
@@ -48,9 +49,9 @@ func (ic *InvoiceCreatorImpl) CreateInvoice(gift *tg.StarGift, receiverTypes []i
 	case 0:
 		return ic.selfPurchase(gift)
 	case 1:
-		return ic.userPurchase(gift, receiverTypes)
+		return ic.userPurchase(gift)
 	case 2:
-		return ic.channelPurchase(gift, receiverTypes)
+		return ic.channelPurchase(gift)
 	default:
 		return nil, errors.Wrap(errors.New("unexpected receiver type"),
 			fmt.Sprintf("unexpected receiver type: %d", randReceiverType))
@@ -69,7 +70,7 @@ func (ic *InvoiceCreatorImpl) selfPurchase(gift *tg.StarGift) (*tg.InputInvoiceS
 	return invoice, nil
 }
 
-func (ic *InvoiceCreatorImpl) userPurchase(gift *tg.StarGift, receiverTypes []int) (*tg.InputInvoiceStarGift, error) {
+func (ic *InvoiceCreatorImpl) userPurchase(gift *tg.StarGift) (*tg.InputInvoiceStarGift, error) {
 	userInfo, err := ic.getUserInfo(context.Background(), utils.SelectRandomElementFast(ic.userReceiver))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create invoice without user access hash")
@@ -86,7 +87,7 @@ func (ic *InvoiceCreatorImpl) userPurchase(gift *tg.StarGift, receiverTypes []in
 	return invoice, nil
 }
 
-func (ic *InvoiceCreatorImpl) channelPurchase(gift *tg.StarGift, receiverTypes []int) (*tg.InputInvoiceStarGift, error) {
+func (ic *InvoiceCreatorImpl) channelPurchase(gift *tg.StarGift) (*tg.InputInvoiceStarGift, error) {
 	channelInfo, err := ic.getChannelInfo(context.Background(), utils.SelectRandomElementFast(ic.channelReceiver))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create invoice without channel access hash")
@@ -143,6 +144,7 @@ func (ic *InvoiceCreatorImpl) getChannelInfo(ctx context.Context, channelID stri
 //   - *tg.User: user information with access hash
 //   - error: user retrieval error or API communication failure
 func (ic *InvoiceCreatorImpl) getUserInfo(ctx context.Context, userID string) (*tg.User, error) {
+	logger.GlobalLogger.Infof("Getting user info for %s", userID)
 	user, err := ic.idCache.GetUser(userID)
 	if err == nil {
 		return user, nil
