@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
 	"gift-buyer/pkg/errors"
-	"gift-buyer/pkg/logger"
 	"gift-buyer/pkg/utils"
 	"math/rand"
 	"time"
@@ -144,7 +143,6 @@ func (ic *InvoiceCreatorImpl) getChannelInfo(ctx context.Context, channelID stri
 //   - *tg.User: user information with access hash
 //   - error: user retrieval error or API communication failure
 func (ic *InvoiceCreatorImpl) getUserInfo(ctx context.Context, userID string) (*tg.User, error) {
-	logger.GlobalLogger.Infof("Getting user info for %s", userID)
 	user, err := ic.idCache.GetUser(userID)
 	if err == nil {
 		return user, nil

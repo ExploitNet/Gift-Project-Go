@@ -36,7 +36,12 @@ func TestLoadConfig_Success(t *testing.T) {
 				LangCode:           "en",
 				LangPack:           "test",
 			},
-			TotalStarCap: 10000,
+			GiftParam: GiftParam{
+				TotalStarCap:  10000,
+				TestMode:      false,
+				LimitedStatus: true,
+				ReleaseBy:     false,
+			},
 			Criterias: []Criterias{
 				{
 					MinPrice:    100,
@@ -52,9 +57,7 @@ func TestLoadConfig_Success(t *testing.T) {
 			Ticker:               30.0,
 			RetryCount:           3,
 			RetryDelay:           5,
-			TestMode:             false,
 			MaxBuyCount:          10,
-			LimitedStatus:        true,
 			ConcurrencyGiftCount: 5,
 			ConcurrentOperations: 3,
 			RPCRateLimit:         10,
@@ -77,16 +80,16 @@ func TestLoadConfig_Success(t *testing.T) {
 	assert.Equal(t, config.SoftConfig.RepoName, loadedConfig.SoftConfig.RepoName)
 	assert.Equal(t, config.SoftConfig.ApiLink, loadedConfig.SoftConfig.ApiLink)
 	assert.Equal(t, config.SoftConfig.TgSettings, loadedConfig.SoftConfig.TgSettings)
-	assert.Equal(t, config.SoftConfig.TotalStarCap, loadedConfig.SoftConfig.TotalStarCap)
+	assert.Equal(t, config.SoftConfig.GiftParam.TotalStarCap, loadedConfig.SoftConfig.GiftParam.TotalStarCap)
 	assert.Equal(t, len(config.SoftConfig.Criterias), len(loadedConfig.SoftConfig.Criterias))
 	assert.Equal(t, config.SoftConfig.Criterias[0], loadedConfig.SoftConfig.Criterias[0])
 	assert.Equal(t, config.SoftConfig.Receiver, loadedConfig.SoftConfig.Receiver)
 	assert.Equal(t, config.SoftConfig.Ticker, loadedConfig.SoftConfig.Ticker)
 	assert.Equal(t, config.SoftConfig.RetryCount, loadedConfig.SoftConfig.RetryCount)
 	assert.Equal(t, config.SoftConfig.RetryDelay, loadedConfig.SoftConfig.RetryDelay)
-	assert.Equal(t, config.SoftConfig.TestMode, loadedConfig.SoftConfig.TestMode)
+	assert.Equal(t, config.SoftConfig.GiftParam.TestMode, loadedConfig.SoftConfig.GiftParam.TestMode)
 	assert.Equal(t, config.SoftConfig.MaxBuyCount, loadedConfig.SoftConfig.MaxBuyCount)
-	assert.Equal(t, config.SoftConfig.LimitedStatus, loadedConfig.SoftConfig.LimitedStatus)
+	assert.Equal(t, config.SoftConfig.GiftParam.LimitedStatus, loadedConfig.SoftConfig.GiftParam.LimitedStatus)
 	assert.Equal(t, config.SoftConfig.ConcurrencyGiftCount, loadedConfig.SoftConfig.ConcurrencyGiftCount)
 	assert.Equal(t, config.SoftConfig.ConcurrentOperations, loadedConfig.SoftConfig.ConcurrentOperations)
 	assert.Equal(t, config.SoftConfig.RPCRateLimit, loadedConfig.SoftConfig.RPCRateLimit)
@@ -281,8 +284,10 @@ func TestLoadConfig_BooleanFields(t *testing.T) {
 	config := &AppConfig{
 		LoggerLevel: "info",
 		SoftConfig: SoftConfig{
-			TestMode:      true,
-			LimitedStatus: false,
+			GiftParam: GiftParam{
+				TestMode:      true,
+				LimitedStatus: false,
+			},
 		},
 	}
 
@@ -294,8 +299,8 @@ func TestLoadConfig_BooleanFields(t *testing.T) {
 	loadedConfig, err := LoadConfig(configPath)
 	assert.NoError(t, err)
 	assert.NotNil(t, loadedConfig)
-	assert.True(t, loadedConfig.SoftConfig.TestMode)
-	assert.False(t, loadedConfig.SoftConfig.LimitedStatus)
+	assert.True(t, loadedConfig.SoftConfig.GiftParam.TestMode)
+	assert.False(t, loadedConfig.SoftConfig.GiftParam.LimitedStatus)
 }
 
 func TestLoadConfig_ComplexReceiverParams(t *testing.T) {
@@ -361,16 +366,19 @@ func TestLoadConfig_AllFieldTypes(t *testing.T) {
 			RepoOwner:            "github-user",
 			RepoName:             "test-repo",
 			ApiLink:              "https://custom-api.example.com",
-			TotalStarCap:         50000,
 			Ticker:               45.5,
 			RetryCount:           7,
 			RetryDelay:           10,
-			TestMode:             true,
 			MaxBuyCount:          25,
-			LimitedStatus:        false,
 			ConcurrencyGiftCount: 8,
 			ConcurrentOperations: 6,
 			RPCRateLimit:         20,
+			GiftParam: GiftParam{
+				TotalStarCap:  50000,
+				TestMode:      true,
+				LimitedStatus: false,
+				ReleaseBy:     true,
+			},
 			TgSettings: TgSettings{
 				AppId:              999888,
 				ApiHash:            "full_test_hash",
@@ -421,13 +429,13 @@ func TestLoadConfig_AllFieldTypes(t *testing.T) {
 	assert.Equal(t, config.SoftConfig.RepoOwner, loadedConfig.SoftConfig.RepoOwner)
 	assert.Equal(t, config.SoftConfig.RepoName, loadedConfig.SoftConfig.RepoName)
 	assert.Equal(t, config.SoftConfig.ApiLink, loadedConfig.SoftConfig.ApiLink)
-	assert.Equal(t, config.SoftConfig.TotalStarCap, loadedConfig.SoftConfig.TotalStarCap)
+	assert.Equal(t, config.SoftConfig.GiftParam.TotalStarCap, loadedConfig.SoftConfig.GiftParam.TotalStarCap)
 	assert.Equal(t, config.SoftConfig.Ticker, loadedConfig.SoftConfig.Ticker)
 	assert.Equal(t, config.SoftConfig.RetryCount, loadedConfig.SoftConfig.RetryCount)
 	assert.Equal(t, config.SoftConfig.RetryDelay, loadedConfig.SoftConfig.RetryDelay)
-	assert.Equal(t, config.SoftConfig.TestMode, loadedConfig.SoftConfig.TestMode)
+	assert.Equal(t, config.SoftConfig.GiftParam.TestMode, loadedConfig.SoftConfig.GiftParam.TestMode)
 	assert.Equal(t, config.SoftConfig.MaxBuyCount, loadedConfig.SoftConfig.MaxBuyCount)
-	assert.Equal(t, config.SoftConfig.LimitedStatus, loadedConfig.SoftConfig.LimitedStatus)
+	assert.Equal(t, config.SoftConfig.GiftParam.LimitedStatus, loadedConfig.SoftConfig.GiftParam.LimitedStatus)
 	assert.Equal(t, config.SoftConfig.ConcurrencyGiftCount, loadedConfig.SoftConfig.ConcurrencyGiftCount)
 	assert.Equal(t, config.SoftConfig.ConcurrentOperations, loadedConfig.SoftConfig.ConcurrentOperations)
 	assert.Equal(t, config.SoftConfig.RPCRateLimit, loadedConfig.SoftConfig.RPCRateLimit)
