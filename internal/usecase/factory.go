@@ -99,7 +99,7 @@ func (f *Factory) CreateSystem() (UseCase, error) {
 		}
 	}
 
-	validator := giftValidator.NewGiftValidator(f.cfg.Criterias, f.cfg.TotalStarCap, f.cfg.TestMode, f.cfg.LimitedStatus)
+	validator := giftValidator.NewGiftValidator(f.cfg.Criterias, f.cfg.GiftParam)
 	manager := giftManager.NewGiftManager(api)
 	cache := giftCache.NewGiftCache()
 	userCache := idCache.NewIDCache()

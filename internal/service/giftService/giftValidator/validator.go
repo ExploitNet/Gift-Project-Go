@@ -14,7 +14,7 @@ import (
 // against configured purchase criteria. It evaluates gifts based on price,
 // supply availability, and total star spending caps.
 type giftValidatorImpl struct {
-	LimitedStatus bool
+	limitedStatus, releaseBy bool
 	// criteria contains the list of validation criteria for gift purchases
 	criteria []config.Criterias
 
@@ -35,12 +35,13 @@ type giftValidatorImpl struct {
 //
 // Returns:
 //   - giftInterfaces.GiftValidator: configured gift validator instance
-func NewGiftValidator(criterias []config.Criterias, totalStarCap int64, testMode bool, limitedStatus bool) *giftValidatorImpl {
+func NewGiftValidator(criterias []config.Criterias, giftParam config.GiftParam) *giftValidatorImpl {
 	return &giftValidatorImpl{
 		criteria:      criterias,
-		totalStarCap:  totalStarCap,
-		testMode:      testMode,
-		LimitedStatus: limitedStatus,
+		totalStarCap:  giftParam.TotalStarCap,
+		testMode:      giftParam.TestMode,
+		limitedStatus: giftParam.LimitedStatus,
+		releaseBy:     giftParam.ReleaseBy,
 	}
 }
 
@@ -65,7 +66,11 @@ func (gv *giftValidatorImpl) IsEligible(gift *tg.StarGift) (*giftTypes.GiftRequi
 		return nil, false
 	}
 
-	if gift.Limited != gv.LimitedStatus {
+	if gift.Limited != gv.limitedStatus {
+		return nil, false
+	}
+
+	if !gv.releaseByValidation(gift) {
 		return nil, false
 	}
 
@@ -158,4 +163,13 @@ func (gv *giftValidatorImpl) starCapValidation(gift *tg.StarGift) bool {
 	price := gift.GetStars()
 	giftSupply, _ := gift.GetAvailabilityTotal()
 	return (price * int64(giftSupply)) <= gv.totalStarCap
+}
+
+func (gv *giftValidatorImpl) releaseByValidation(gift *tg.StarGift) bool {
+	_, hasReleasedBy := gift.GetReleasedBy()
+
+	if hasReleasedBy && !gv.releaseBy {
+		return false
+	}
+	return true
 }
