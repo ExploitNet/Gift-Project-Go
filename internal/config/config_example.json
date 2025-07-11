@@ -53,10 +53,17 @@
             }
         ],
         
-        "_comment_limits": "=== ГЛОБАЛЬНЫЕ ОГРАНИЧЕНИЯ ===",
-        "total_star_cap": 1000000000000,
-        "max_buy_count": 100,
-        "limited_status": true,
+        "_comment_gift_params": "=== ПАРАМЕТРЫ ПОДАРКОВ ===",
+        "gift_param": {
+            "_comment_star_cap": "Максимальная капитализация в звездах",
+            "total_star_cap": 1000000000000,
+            "_comment_limited": "Покупать только ограниченные подарки (true) или неограниченные (false)",
+            "limited_status": true,
+            "_comment_release": "Покупать только подарки от кого-то конкретного (true/false)",
+            "release_by": false,
+            "_comment_test": "Тестовый режим - отключает проверки лимитов и ограничений (true/false)",
+            "test_mode": false
+        },
         
         "_comment_receivers": "=== ПОЛУЧАТЕЛИ ПОДАРКОВ (ТЕГИ) ===",
         "receiver": {
@@ -69,15 +76,14 @@
         "_comment_performance": "=== ПРОИЗВОДИТЕЛЬНОСТЬ И НАДЕЖНОСТЬ ===",
         "_comment_monitoring": "Интервал мониторинга в секундах",
         "ticker": 2.0,
+        "_comment_limits": "Глобальные ограничения на покупки",
+        "max_buy_count": 100,
         "_comment_retry": "РЕКОМЕНДУЕТСЯ: 5+ попыток, 2-3 сек задержка, макс 30 RPS",
         "retry_count": 5,
         "retry_delay": 2.5,
         "_comment_concurrency": "Параллельная обработка",
         "concurrency_gift_count": 10,
         "concurrent_operations": 300,
-        "rpc_rate_limit": 30,
-        
-        "_comment_testing": "=== ТЕСТИРОВАНИЕ ===",
-        "test_mode": false
+        "rpc_rate_limit": 20
     }
 }

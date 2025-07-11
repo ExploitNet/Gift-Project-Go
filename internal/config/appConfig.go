@@ -31,9 +31,6 @@ type SoftConfig struct {
 	// TgSettings contains Telegram API and bot configuration
 	TgSettings TgSettings `json:"tg_settings"`
 
-	// TotalStarCap is the maximum total stars that can be spent across all gifts
-	TotalStarCap int64 `json:"total_star_cap"`
-
 	// Criterias defines the list of criteria for gift validation
 	Criterias []Criterias `json:"criterias"`
 
@@ -49,14 +46,11 @@ type SoftConfig struct {
 	// RetryDelay is the delay between retries in seconds
 	RetryDelay float64 `json:"retry_delay"`
 
-	// TestMode enables test mode which bypasses certain validations
-	TestMode bool `json:"test_mode"`
-
 	// MaxBuyCount is the maximum number of gifts that can be purchased
 	MaxBuyCount int64 `json:"max_buy_count"`
 
-	// LimitedStatus is the status of the limited gifts
-	LimitedStatus bool `json:"limited_status"`
+	// GiftParam is the parameter for the gift
+	GiftParam GiftParam `json:"gift_param"`
 
 	// ConcurrencyLimit is the maximum number of concurrent purchases
 	ConcurrencyGiftCount int `json:"concurrency_gift_count"`
@@ -66,6 +60,20 @@ type SoftConfig struct {
 
 	// RPCRateLimit is the rate limit for RPC requests
 	RPCRateLimit int `json:"rpc_rate_limit"`
+}
+
+type GiftParam struct {
+	// LimitedStatus is the status of the limited gifts
+	LimitedStatus bool `json:"limited_status"`
+
+	// TestMode enables test mode which bypasses certain validations
+	TestMode bool `json:"test_mode"`
+
+	// TotalStarCap is the maximum total stars that can be spent across all gifts
+	TotalStarCap int64 `json:"total_star_cap"`
+
+	// ReleaseBy is the type of release by
+	ReleaseBy bool `json:"release_by"`
 }
 
 // TgSettings contains all Telegram-related configuration parameters.
