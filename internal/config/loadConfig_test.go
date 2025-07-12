@@ -29,12 +29,6 @@ func TestLoadConfig_Success(t *testing.T) {
 				Password:           "test_password",
 				TgBotKey:           "test_bot_key",
 				NotificationChatID: 987654321,
-				DeviceModel:        "TestDevice",
-				SystemVersion:      "TestOS 1.0",
-				AppVersion:         "1.0.0",
-				SystemLangCode:     "en",
-				LangCode:           "en",
-				LangPack:           "test",
 			},
 			GiftParam: GiftParam{
 				TotalStarCap:  10000,
@@ -386,12 +380,6 @@ func TestLoadConfig_AllFieldTypes(t *testing.T) {
 				Password:           "complex_password",
 				TgBotKey:           "bot_key_123",
 				NotificationChatID: -1001234567890,
-				DeviceModel:        "TestDevice Pro",
-				SystemVersion:      "TestOS 2.0",
-				AppVersion:         "2.1.0",
-				SystemLangCode:     "ru",
-				LangCode:           "ru",
-				LangPack:           "android",
 			},
 			Criterias: []Criterias{
 				{

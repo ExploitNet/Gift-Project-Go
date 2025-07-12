@@ -52,12 +52,10 @@ func (f *AuthManagerImpl) InitClient(ctx context.Context) (*tg.Client, error) {
 		return nil, errors.New("session manager is nil")
 	}
 
-	deviceConfig := f.sessionManager.CreateDeviceConfig()
 	client := telegram.NewClient(f.cfg.AppId, f.cfg.ApiHash, telegram.Options{
 		SessionStorage: &telegram.FileSessionStorage{
 			Path: "session.json",
 		},
-		Device: deviceConfig,
 	})
 
 	api, err := f.sessionManager.InitUserAPI(client, ctx)

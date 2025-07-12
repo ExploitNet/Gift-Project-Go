@@ -65,12 +65,6 @@ type SessionManager interface {
 	//   - *tg.Client: authenticated Telegram API client
 	//   - error: authentication error, network error, or timeout
 	InitBotAPI(ctx context.Context) (*tg.Client, error)
-
-	// CreateDeviceConfig creates a new device configuration for the Telegram client
-	//
-	// Returns:
-	//   - telegram.DeviceConfig: device configuration for the Telegram client
-	CreateDeviceConfig() telegram.DeviceConfig
 }
 
 // ApiChecker interface defines the methods for checking the Telegram API

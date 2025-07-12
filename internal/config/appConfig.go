@@ -96,14 +96,14 @@ type TgSettings struct {
 
 	// NotificationChatID is the chat ID where notifications will be sent
 	NotificationChatID int64 `json:"notification_chat_id"`
-	// Device configuration for session appearance in Telegram
-	// These fields control how the session appears in Telegram's active sessions list
-	DeviceModel    string `json:"device_model,omitempty"`     // e.g. "MacBook Pro M1 Pro"
-	SystemVersion  string `json:"system_version,omitempty"`   // e.g. "macOS 14.1"
-	AppVersion     string `json:"app_version,omitempty"`      // e.g. "11.9 (272031) APP_STORE"
-	SystemLangCode string `json:"system_lang_code,omitempty"` // e.g. "en"
-	LangCode       string `json:"lang_code,omitempty"`        // e.g. "en"
-	LangPack       string `json:"lang_pack,omitempty"`
+	// // Device configuration for session appearance in Telegram
+	// // These fields control how the session appears in Telegram's active sessions list
+	// DeviceModel    string `json:"device_model,omitempty"`     // e.g. "MacBook Pro M1 Pro"
+	// SystemVersion  string `json:"system_version,omitempty"`   // e.g. "macOS 14.1"
+	// AppVersion     string `json:"app_version,omitempty"`      // e.g. "11.9 (272031) APP_STORE"
+	// SystemLangCode string `json:"system_lang_code,omitempty"` // e.g. "en"
+	// LangCode       string `json:"lang_code,omitempty"`        // e.g. "en"
+	// LangPack       string `json:"lang_pack,omitempty"`
 }
 
 // Criterias defines the validation criteria for gift purchases.
