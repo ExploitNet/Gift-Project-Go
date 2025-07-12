@@ -41,13 +41,17 @@ type giftMonitorImpl struct {
 	// ticker controls the monitoring interval
 	ticker *time.Ticker
 
-	firstRun bool
-
 	// paused indicates if monitoring is currently paused
 	paused bool
 
+	// firstRun indicates if the monitor is running for the first time
+	firstRun bool
+
 	// mu protects the paused field from concurrent access
 	mu sync.RWMutex
+
+	// testMode indicates if the monitor is running in test mode
+	testMode bool
 }
 
 // NewGiftMonitor creates a new GiftMonitor instance with the specified dependencies.
@@ -71,6 +75,7 @@ func NewGiftMonitor(
 	tickTime time.Duration,
 	errorLogsWriter logsWriter.LogsWriter,
 	infoLogsWriter logsWriter.LogsWriter,
+	testMode bool,
 ) *giftMonitorImpl {
 	return &giftMonitorImpl{
 		cache:           cache,
@@ -81,6 +86,7 @@ func NewGiftMonitor(
 		firstRun:        true,
 		errorLogsWriter: errorLogsWriter,
 		infoLogsWriter:  infoLogsWriter,
+		testMode:        testMode,
 	}
 }
 
@@ -131,7 +137,9 @@ func (gm *giftMonitorImpl) Start(ctx context.Context) (map[*tg.StarGift]*giftTyp
 			return newGifts, nil
 		case err := <-errCh:
 			if !gm.IsPaused() {
-				gm.notification.SendErrorNotification(ctx, err)
+				if notifErr := gm.notification.SendErrorNotification(ctx, err); notifErr != nil {
+					giftServiceHelpers.LogError(gm.errorLogsWriter, notifErr.Error())
+				}
 				giftServiceHelpers.LogError(gm.errorLogsWriter, err.Error())
 			}
 			continue
@@ -169,7 +177,7 @@ func (gm *giftMonitorImpl) checkForNewGifts(ctx context.Context) (map[*tg.StarGi
 		gm.cache.SetGift(gift.ID, gift)
 	}
 
-	if gm.firstRun {
+	if gm.firstRun && !gm.testMode {
 		gm.firstRun = false
 		return nil, errors.Wrap(errors.New("first run"), "touch grass")
 	}
