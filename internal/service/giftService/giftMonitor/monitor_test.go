@@ -121,7 +121,7 @@ func TestNewGiftMonitor(t *testing.T) {
 	mockInfoWriter := &MockLogsWriter{}
 	tickTime := time.Second
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, tickTime, mockErrorWriter, mockInfoWriter)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, tickTime, mockErrorWriter, mockInfoWriter, true)
 
 	assert.NotNil(t, monitor)
 
@@ -141,7 +141,7 @@ func TestGiftMonitor_Start_FirstRun(t *testing.T) {
 	mockErrorWriter := &MockLogsWriter{}
 	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10, mockErrorWriter, mockInfoWriter)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10, mockErrorWriter, mockInfoWriter, true)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
 	defer cancel()
 
@@ -193,6 +193,7 @@ func TestGiftMonitor_Start_SecondRunWithNewGifts(t *testing.T) {
 		firstRun:        false, // Skip first run
 		errorLogsWriter: mockErrorWriter,
 		infoLogsWriter:  mockInfoWriter,
+		testMode:        true,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
@@ -234,7 +235,7 @@ func TestGiftMonitor_Start_ContextCancelled(t *testing.T) {
 	mockErrorWriter := &MockLogsWriter{}
 	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter, true)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
@@ -253,7 +254,7 @@ func TestGiftMonitor_Start_NoNewGifts(t *testing.T) {
 	mockErrorWriter := &MockLogsWriter{}
 	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10, mockErrorWriter, mockInfoWriter)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Millisecond*10, mockErrorWriter, mockInfoWriter, true)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
 	defer cancel()
 
@@ -288,6 +289,7 @@ func TestGiftMonitor_CheckForNewGifts_Success(t *testing.T) {
 		firstRun:        false,
 		errorLogsWriter: mockErrorWriter,
 		infoLogsWriter:  mockInfoWriter,
+		testMode:        true,
 	}
 
 	ctx := context.Background()
@@ -439,7 +441,7 @@ func TestGiftMonitor_PauseResumeIsPaused(t *testing.T) {
 	mockErrorWriter := &MockLogsWriter{}
 	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter, true)
 
 	// Initially should not be paused
 	assert.False(t, monitor.IsPaused())
@@ -508,7 +510,7 @@ func TestGiftMonitor_ConcurrentPauseResume(t *testing.T) {
 	mockErrorWriter := &MockLogsWriter{}
 	mockInfoWriter := &MockLogsWriter{}
 
-	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter)
+	monitor := NewGiftMonitor(mockCache, mockManager, mockValidator, mockNotification, time.Second, mockErrorWriter, mockInfoWriter, true)
 
 	// Test concurrent access to pause/resume methods
 	var wg sync.WaitGroup
