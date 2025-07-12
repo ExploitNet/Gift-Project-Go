@@ -104,7 +104,7 @@ func (f *Factory) CreateSystem() (UseCase, error) {
 	cache := giftCache.NewGiftCache()
 	userCache := idCache.NewIDCache()
 	notification := giftNotification.NewNotification(botClient, &f.cfg.TgSettings, errorLogsWriter)
-	monitor := giftMonitor.NewGiftMonitor(cache, manager, validator, notification, time.Duration(tickerInterval*1000)*time.Millisecond, errorLogsWriter, infoLogsWriter)
+	monitor := giftMonitor.NewGiftMonitor(cache, manager, validator, notification, time.Duration(tickerInterval*1000)*time.Millisecond, errorLogsWriter, infoLogsWriter, f.cfg.GiftParam.TestMode)
 	authManager.SetMonitor(monitor)
 	rl := rateLimiter.NewRateLimiter(f.cfg.RPCRateLimit)
 	counter := atomicCounter.NewAtomicCounter(f.cfg.MaxBuyCount)

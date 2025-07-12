@@ -157,7 +157,7 @@ func (tc *useCaseImpl) Start() {
 					defer tc.wg.Done()
 					for gift, require := range newGifts {
 						if err := tc.notification.SendNewGiftNotification(tc.ctx, gift); err != nil {
-							logger.GlobalLogger.Error("Error sending notification", "error", err, "gift_id", gift.ID, "count", require.CountForBuy)
+							logger.GlobalLogger.Errorf("Error sending notification: %v, gift_id: %d, count: %d", err, gift.ID, require.CountForBuy)
 						}
 					}
 				}()
@@ -192,7 +192,7 @@ func (tc *useCaseImpl) SetIds(ctx context.Context) error {
 
 func (tc *useCaseImpl) CheckForUpdates() {
 	if err := tc.checkNewUpdates(); err != nil {
-		logger.GlobalLogger.Error("Error checking for updates", "error", err)
+		logger.GlobalLogger.Errorf("Error checking for updates: %v", err)
 	}
 	for {
 		select {
@@ -200,7 +200,7 @@ func (tc *useCaseImpl) CheckForUpdates() {
 			return
 		case <-tc.updateTicker.C:
 			if err := tc.checkNewUpdates(); err != nil {
-				logger.GlobalLogger.Error("Error checking for updates", "error", err)
+				logger.GlobalLogger.Errorf("Error checking for updates: %v", err)
 			}
 		}
 	}
@@ -209,25 +209,25 @@ func (tc *useCaseImpl) CheckForUpdates() {
 func (tc *useCaseImpl) checkNewUpdates() error {
 	localVersion, err := tc.gitVersion.GetCurrentVersion()
 	if err != nil {
-		logger.GlobalLogger.Error("Error getting current version", "error", err)
+		logger.GlobalLogger.Errorf("Error getting current version: %v", err)
 		return err
 	}
 
 	remoteVersion, err := tc.gitVersion.GetLatestVersion()
 	if err != nil {
-		logger.GlobalLogger.Error("Error getting latest version", "error", err)
+		logger.GlobalLogger.Errorf("Error getting latest version: %v", err)
 		return err
 	}
 
 	ok, err := tc.gitVersion.CompareVersions(localVersion, remoteVersion.TagName)
 	if err != nil {
-		logger.GlobalLogger.Error("Error comparing versions", "error", err)
+		logger.GlobalLogger.Errorf("Error comparing versions: %v", err)
 		return err
 	}
 
 	if ok && tc.lastNotificationVersion != remoteVersion.TagName {
 		if err := tc.notification.SendUpdateNotification(tc.ctx, remoteVersion.TagName, fmt.Sprintf("%s\n", remoteVersion.Body)); err != nil {
-			logger.GlobalLogger.Error("Error sending update notification", "error", err)
+			logger.GlobalLogger.Errorf("Error sending update notification: %v", err)
 		}
 		tc.lastNotificationVersion = remoteVersion.TagName
 	}
