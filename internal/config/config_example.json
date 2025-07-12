@@ -67,9 +67,9 @@
         
         "_comment_receivers": "=== ПОЛУЧАТЕЛИ ПОДАРКОВ (ТЕГИ) ===",
         "receiver": {
-            "_comment_users": "Теги пользователей (без @)",
+            "_comment_users": "Теги пользователей (без @). Оставить пустой массив, если не нужно покупать подарки пользователям",
             "user_receiver_id": ["username1", "username2", "username3"],
-            "_comment_channels": "Теги каналов (без @)",
+            "_comment_channels": "Теги каналов (без @). Оставить пустой массив, если не нужно покупать подарки в каналы",
             "channel_receiver_id": ["channel1", "channel2", "channel3"]
         },
         
