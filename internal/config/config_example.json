@@ -16,15 +16,7 @@
             "_comment_bot": "ВАЖНО: Настройте бота для получения уведомлений об ошибках, статусе покупок и процессе переподключения",
             "tg_bot_key": "1234567890:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
             "_comment_chat": "Ваш User ID для отправки уведомлений (получить у @userinfobot)",
-            "notification_chat_id": 1234567890,
-            
-            "_comment_device": "=== КОНФИГУРАЦИЯ УСТРОЙСТВА ===",
-            "device_model": "MacBook Pro M1 Pro",
-            "system_version": "macOS 15.3.1",
-            "app_version": "11.9 (272031) APP_STORE",
-            "system_lang_code": "en",
-            "lang_code": "en",
-            "lang_pack": "en"
+            "notification_chat_id": 1234567890
         },
         
         "_comment_updates": "=== СИСТЕМА ОБНОВЛЕНИЙ ===",
