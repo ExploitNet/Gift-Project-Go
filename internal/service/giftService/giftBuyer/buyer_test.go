@@ -401,3 +401,9 @@ type MockLogsWriter struct{}
 func (m *MockLogsWriter) Write(entry *logTypes.LogEntry) error {
 	return nil
 }
+
+func (m *MockLogsWriter) LogError(message string) {}
+
+func (m *MockLogsWriter) LogErrorf(format string, args ...interface{}) {}
+
+func (m *MockLogsWriter) LogInfo(message string) {}

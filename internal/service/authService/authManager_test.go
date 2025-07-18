@@ -19,6 +19,12 @@ func (m *MockLogsWriter) Write(entry *logTypes.LogEntry) error {
 	return nil
 }
 
+func (m *MockLogsWriter) LogError(message string) {}
+
+func (m *MockLogsWriter) LogErrorf(format string, args ...interface{}) {}
+
+func (m *MockLogsWriter) LogInfo(message string) {}
+
 func TestNewAuthManager(t *testing.T) {
 	sessionManager := &MockSessionManager{}
 	apiChecker := &MockApiChecker{}

@@ -50,6 +50,12 @@ func (m *MockLogsWriter) Write(entry *logTypes.LogEntry) error {
 	return nil
 }
 
+func (m *MockLogsWriter) LogError(message string) {}
+
+func (m *MockLogsWriter) LogErrorf(format string, args ...interface{}) {}
+
+func (m *MockLogsWriter) LogInfo(message string) {}
+
 func createTestGift(id int64, stars int64) *tg.StarGift {
 	return &tg.StarGift{
 		ID:    id,
