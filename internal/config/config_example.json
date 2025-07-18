@@ -19,6 +19,10 @@
             "notification_chat_id": 1234567890
         },
         
+        "_comment_logging_system": "=== СИСТЕМА ЛОГИРОВАНИЯ ===",
+        "_comment_log_flag": "Флаг для записи логов как в файл, так и в консоль (true/false)",
+        "log_flag": true,
+        
         "_comment_updates": "=== СИСТЕМА ОБНОВЛЕНИЙ ===",
         "update_ticker": 60,
         "repo_owner": "ssq0-0",

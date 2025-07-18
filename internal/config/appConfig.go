@@ -60,6 +60,12 @@ type SoftConfig struct {
 
 	// RPCRateLimit is the rate limit for RPC requests
 	RPCRateLimit int `json:"rpc_rate_limit"`
+
+	// LogFlag controls whether logs should be written to both file and console.
+	// When true: logs are written to both log files (info_logs.jsonl, error_logs.jsonl) AND displayed in console
+	// When false: logs are written ONLY to log files, console output is disabled
+	// This flag is useful for production environments where console output should be minimized
+	LogFlag bool `json:"log_flag"`
 }
 
 type GiftParam struct {
