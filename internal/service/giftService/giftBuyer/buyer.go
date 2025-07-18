@@ -5,7 +5,6 @@ package giftBuyer
 
 import (
 	"context"
-	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
 	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
@@ -32,7 +31,7 @@ type giftBuyerImpl struct {
 	invoiceCreator giftInterfaces.InvoiceCreator
 
 	// logsWriter is used to write logs to a file
-	errorLogsWriter logsWriter.LogsWriter
+	errorLogsWriter giftInterfaces.ErrorLogger
 
 	// api is the Telegram client used for payment operations
 	api *tg.Client
@@ -86,7 +85,7 @@ func NewGiftBuyer(
 	purchaseProcessor giftInterfaces.PurchaseProcessor,
 	monitorProcessor giftInterfaces.MonitorProcessor,
 	counter giftInterfaces.Counter,
-	errorLogsWriter logsWriter.LogsWriter,
+	errorLogsWriter giftInterfaces.ErrorLogger,
 ) *giftBuyerImpl {
 	return &giftBuyerImpl{
 		api:                  api,

@@ -101,3 +101,31 @@ type GiftMonitorAndAuthController interface {
 	// IsPaused returns the status of the gift monitoring process.
 	IsPaused() bool
 }
+
+// InfoLogger defines the interface for logging information.
+// It provides methods to log information messages.
+type InfoLogger interface {
+	// LogInfo logs an information message.
+	//
+	// Parameters:
+	//   - message: the information message to log
+	LogInfo(message string)
+}
+
+// ErrorLogger defines the interface for logging errors.
+// It provides methods to log errors and formatted errors.
+type ErrorLogger interface {
+	// LogError logs an error message.
+	//
+	// Parameters:
+	//   - message: the error message to log
+	LogError(message string)
+
+	// LogErrorf logs a formatted error message.
+	// It formats the message using the provided format and arguments.
+	//
+	// Parameters:
+	//   - format: the format string for the error message
+	//   - args: arguments to be formatted into the message
+	LogErrorf(format string, args ...interface{})
+}

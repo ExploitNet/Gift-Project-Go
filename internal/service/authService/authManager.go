@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"gift-buyer/internal/config"
-	"gift-buyer/internal/infrastructure/logsWriter"
 	"gift-buyer/internal/service/authService/apiChecker"
 	"gift-buyer/internal/service/authService/authInterfaces"
 	"os"
@@ -27,11 +26,11 @@ type AuthManagerImpl struct {
 	stopCh          chan struct{}
 	wg              sync.WaitGroup
 	monitor         authInterfaces.GiftMonitorAndAuthController
-	infoLogsWriter  logsWriter.LogsWriter
-	errorLogsWriter logsWriter.LogsWriter
+	infoLogsWriter  authInterfaces.InfoLogger
+	errorLogsWriter authInterfaces.ErrorLogger
 }
 
-func NewAuthManager(sessionManager authInterfaces.SessionManager, apiChecker authInterfaces.ApiChecker, cfg *config.TgSettings, infoLogsWriter logsWriter.LogsWriter, errorLogsWriter logsWriter.LogsWriter) *AuthManagerImpl {
+func NewAuthManager(sessionManager authInterfaces.SessionManager, apiChecker authInterfaces.ApiChecker, cfg *config.TgSettings, infoLogsWriter authInterfaces.InfoLogger, errorLogsWriter authInterfaces.ErrorLogger) *AuthManagerImpl {
 	return &AuthManagerImpl{
 		sessionManager:  sessionManager,
 		apiChecker:      apiChecker,
@@ -70,11 +69,11 @@ func (f *AuthManagerImpl) InitClient(ctx context.Context) (*tg.Client, error) {
 
 func (f *AuthManagerImpl) RunApiChecker(ctx context.Context) {
 	if f.apiChecker == nil {
-		f.logError("API checker is nil, skipping")
+		f.errorLogsWriter.LogError("API checker is nil, skipping")
 		return
 	}
 
-	f.logInfo("Starting API monitoring")
+	f.infoLogsWriter.LogInfo("Starting API monitoring")
 
 	f.wg.Add(1)
 	go func() {
@@ -85,26 +84,26 @@ func (f *AuthManagerImpl) RunApiChecker(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				f.logInfo("API monitoring stopped due to context cancellation")
+				f.infoLogsWriter.LogInfo("API monitoring stopped due to context cancellation")
 				return
 			case <-f.stopCh:
-				f.logInfo("API monitoring stopped due to stop signal")
+				f.infoLogsWriter.LogInfo("API monitoring stopped due to stop signal")
 				return
 			case <-ticker.C:
 				if err := f.apiChecker.Run(ctx); err != nil {
-					f.logErrorf("API check failed: %v", err)
+					f.errorLogsWriter.LogErrorf("API check failed: %v", err)
 					if f.isCriticalError(err) {
-						f.logErrorf("Critical API error detected, triggering reconnect: %v", err)
+						f.errorLogsWriter.LogErrorf("Critical API error detected, triggering reconnect: %v", err)
 						select {
 						case f.reconnect <- struct{}{}:
 							f.stopCh <- struct{}{}
-							f.logInfo("Reconnect signal sent")
+							f.infoLogsWriter.LogInfo("Reconnect signal sent")
 						default:
-							f.logError("Reconnect channel is full")
+							f.errorLogsWriter.LogError("Reconnect channel is full")
 						}
 					}
 				} else {
-					f.logInfo("API check successful")
+					f.infoLogsWriter.LogInfo("API check successful")
 				}
 			}
 		}
@@ -133,32 +132,32 @@ func (f *AuthManagerImpl) handleReconnectSignals(ctx context.Context) {
 	for {
 		select {
 		case <-f.reconnect:
-			f.logInfo("Processing reconnect signal")
+			f.infoLogsWriter.LogInfo("Processing reconnect signal")
 
 			if f.monitor != nil {
-				f.logInfo("Pausing gift monitoring during reconnection")
+				f.infoLogsWriter.LogInfo("Pausing gift monitoring during reconnection")
 				f.monitor.Pause()
 			}
 
 			if _, err := f.Reconnect(ctx); err != nil {
-				f.logErrorf("Reconnect failed: %v", err)
+				f.errorLogsWriter.LogErrorf("Reconnect failed: %v", err)
 				if strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "deadline") {
-					f.logError("Reconnection timeout, exiting program")
+					f.errorLogsWriter.LogError("Reconnection timeout, exiting program")
 					os.Exit(1)
 				}
 			} else {
 				if f.monitor != nil {
-					f.logInfo("Resuming gift monitoring after reconnection")
+					f.infoLogsWriter.LogInfo("Resuming gift monitoring after reconnection")
 					f.monitor.Resume()
 				}
 				<-f.stopCh
-				f.logInfo("Reconnection completed successfully")
+				f.infoLogsWriter.LogInfo("Reconnection completed successfully")
 			}
 		case <-f.stopCh:
-			f.logInfo("Stopping reconnect handler")
+			f.infoLogsWriter.LogInfo("Stopping reconnect handler")
 			return
 		case <-ctx.Done():
-			f.logInfo("Context cancelled, stopping reconnect handler")
+			f.infoLogsWriter.LogInfo("Context cancelled, stopping reconnect handler")
 			return
 		}
 	}
@@ -192,7 +191,7 @@ func (f *AuthManagerImpl) GetApi() *tg.Client {
 }
 
 func (f *AuthManagerImpl) Reconnect(ctx context.Context) (*tg.Client, error) {
-	f.logInfo("Starting reconnection process")
+	f.infoLogsWriter.LogInfo("Starting reconnection process")
 
 	tgc, err := f.InitClient(ctx)
 	if err != nil {
@@ -202,15 +201,15 @@ func (f *AuthManagerImpl) Reconnect(ctx context.Context) (*tg.Client, error) {
 	if f.apiChecker != nil {
 		newApiChecker := apiChecker.NewApiChecker(tgc, time.NewTicker(2*time.Second))
 		f.SetApiChecker(newApiChecker)
-		f.logInfo("API checker updated with new client")
+		f.infoLogsWriter.LogInfo("API checker updated with new client")
 	}
 
-	f.logInfo("Reconnection successful")
+	f.infoLogsWriter.LogInfo("Reconnection successful")
 	return tgc, nil
 }
 
 func (f *AuthManagerImpl) Stop() {
-	f.logInfo("Stopping AuthManager...")
+	f.infoLogsWriter.LogInfo("Stopping AuthManager...")
 
 	close(f.stopCh)
 
@@ -222,7 +221,7 @@ func (f *AuthManagerImpl) Stop() {
 
 	f.wg.Wait()
 
-	f.logInfo("AuthManager stopped")
+	f.infoLogsWriter.LogInfo("AuthManager stopped")
 }
 
 func (f *AuthManagerImpl) SetApiChecker(apiChecker authInterfaces.ApiChecker) {
@@ -235,5 +234,5 @@ func (f *AuthManagerImpl) SetMonitor(monitor authInterfaces.GiftMonitorAndAuthCo
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.monitor = monitor
-	f.logInfo("Gift monitor set for auth manager")
+	f.infoLogsWriter.LogInfo("Gift monitor set for auth manager")
 }
