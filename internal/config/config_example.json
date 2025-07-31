@@ -15,6 +15,8 @@
             "_comment_notifications": "=== УВЕДОМЛЕНИЯ И ЛОГИРОВАНИЕ ===",
             "_comment_bot": "ВАЖНО: Настройте бота для получения уведомлений об ошибках, статусе покупок и процессе переподключения",
             "tg_bot_key": "1234567890:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "_comment_datacenter": "Датацентр Telegram (0=авто, 1-5=конкретный ДЦ). Рекомендуется 5 если ДЦ2 лагает",
+            "datacenter": 4,
             "_comment_chat": "Ваш User ID для отправки уведомлений (получить у @userinfobot)",
             "notification_chat_id": 1234567890
         },
