@@ -51,11 +51,18 @@ func (f *AuthManagerImpl) InitClient(ctx context.Context) (*tg.Client, error) {
 		return nil, errors.New("session manager is nil")
 	}
 
-	client := telegram.NewClient(f.cfg.AppId, f.cfg.ApiHash, telegram.Options{
+	opts := telegram.Options{
 		SessionStorage: &telegram.FileSessionStorage{
 			Path: "session.json",
 		},
-	})
+	}
+
+	// Set datacenter if specified
+	if f.cfg.Datacenter > 0 {
+		opts.DC = f.cfg.Datacenter
+	}
+
+	client := telegram.NewClient(f.cfg.AppId, f.cfg.ApiHash, opts)
 
 	api, err := f.sessionManager.InitUserAPI(client, ctx)
 	if err != nil {

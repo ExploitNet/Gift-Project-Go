@@ -127,11 +127,18 @@ func (f *sessionManagerImpl) InitBotAPI(ctx context.Context) (*tg.Client, error)
 		return nil, fmt.Errorf("bot token is not configured")
 	}
 
-	botClient := telegram.NewClient(f.cfg.AppId, f.cfg.ApiHash, telegram.Options{
+	opts := telegram.Options{
 		SessionStorage: &telegram.FileSessionStorage{
 			Path: "bot_session.json",
 		},
-	})
+	}
+
+	// Set datacenter if specified
+	if f.cfg.Datacenter > 0 {
+		opts.DC = f.cfg.Datacenter
+	}
+
+	botClient := telegram.NewClient(f.cfg.AppId, f.cfg.ApiHash, opts)
 
 	botAPI := make(chan *tg.Client, 1)
 	errCh := make(chan error, 1)

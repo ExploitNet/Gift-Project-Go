@@ -100,6 +100,10 @@ type TgSettings struct {
 	// TgBotKey is the bot token for sending notifications
 	TgBotKey string `json:"tg_bot_key"`
 
+	// Datacenter specifies which Telegram datacenter to use (1, 2, 3, 4, 5)
+	// Default is 0 (auto-select). Use 4 for better performance when DC2 is lagging
+	Datacenter int `json:"datacenter"`
+
 	// NotificationChatID is the chat ID where notifications will be sent
 	NotificationChatID int64 `json:"notification_chat_id"`
 	// // Device configuration for session appearance in Telegram
