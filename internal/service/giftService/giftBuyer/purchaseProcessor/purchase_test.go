@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"gift-buyer/internal/service/giftService/giftTypes"
+
 	"github.com/gotd/td/tg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -14,8 +16,8 @@ type MockPaymentProcessor struct {
 	mock.Mock
 }
 
-func (m *MockPaymentProcessor) CreatePaymentForm(ctx context.Context, gift *tg.StarGift, receiverTypes []int) (tg.PaymentsPaymentFormClass, *tg.InputInvoiceStarGift, error) {
-	args := m.Called(ctx, gift, receiverTypes)
+func (m *MockPaymentProcessor) CreatePaymentForm(ctx context.Context, gift *giftTypes.GiftRequire) (tg.PaymentsPaymentFormClass, *tg.InputInvoiceStarGift, error) {
+	args := m.Called(ctx, gift)
 	if args.Get(0) == nil || args.Get(1) == nil {
 		return nil, nil, args.Error(2)
 	}
@@ -26,6 +28,15 @@ func createTestGift(id int64, stars int64) *tg.StarGift {
 	return &tg.StarGift{
 		ID:    id,
 		Stars: stars,
+	}
+}
+
+func createTestGiftRequire(gift *tg.StarGift) *giftTypes.GiftRequire {
+	return &giftTypes.GiftRequire{
+		Gift:         gift,
+		ReceiverType: []int{0},
+		CountForBuy:  1,
+		Hide:         true,
 	}
 }
 
@@ -59,12 +70,13 @@ func TestPurchaseProcessorImpl_PurchaseGift_ErrorCases(t *testing.T) {
 		}
 
 		gift := createTestGift(1, 100)
+		giftRequire := createTestGiftRequire(gift)
 
 		// Настраиваем мок на случай если CreatePaymentForm все-таки вызовется
-		mockPaymentProcessor.On("CreatePaymentForm", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil, assert.AnError)
+		mockPaymentProcessor.On("CreatePaymentForm", mock.Anything, mock.Anything).Return(nil, nil, assert.AnError)
 
 		ctx := context.Background()
-		err := processor.PurchaseGift(ctx, gift, []int{1})
+		err := processor.PurchaseGift(ctx, giftRequire)
 
 		assert.Error(t, err)
 		// Проверяем что есть ошибка (любая)

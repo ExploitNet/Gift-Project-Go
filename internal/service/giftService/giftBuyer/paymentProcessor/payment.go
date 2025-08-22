@@ -3,6 +3,7 @@ package paymentProcessor
 import (
 	"context"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
+	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
 	"sync/atomic"
 	"time"
@@ -25,11 +26,11 @@ func NewPaymentProcessor(api *tg.Client, invoiceCreator giftInterfaces.InvoiceCr
 	}
 }
 
-func (pp *PaymentProcessorImpl) CreatePaymentForm(ctx context.Context, gift *tg.StarGift, receiverTypes []int) (tg.PaymentsPaymentFormClass, *tg.InputInvoiceStarGift, error) {
+func (pp *PaymentProcessorImpl) CreatePaymentForm(ctx context.Context, gift *giftTypes.GiftRequire) (tg.PaymentsPaymentFormClass, *tg.InputInvoiceStarGift, error) {
 	jitter := time.Duration(atomic.AddInt64(&pp.requestCounter, 1)%100) * time.Millisecond
 	time.Sleep(jitter)
 
-	invoice, err := pp.invoiceCreator.CreateInvoice(gift, receiverTypes)
+	invoice, err := pp.invoiceCreator.CreateInvoice(gift)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create invoice")
 	}

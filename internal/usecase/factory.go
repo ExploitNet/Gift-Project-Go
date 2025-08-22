@@ -118,7 +118,7 @@ func (f *Factory) CreateSystem() (UseCase, error) {
 	purchaseProcessor := purchaseProcessor.NewPurchaseProcessor(api, paymentProcessor)
 	monitorProcessor := giftBuyerMonitoring.NewGiftBuyerMonitoring(api, notification, infoLogsHelper, errorLogsHelper)
 	accountManager := accountManager.NewAccountManager(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, userCache, userCache)
-	buyer := giftBuyer.NewGiftBuyer(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, manager, notification, f.cfg.MaxBuyCount, f.cfg.RetryCount, f.cfg.RetryDelay, userCache, f.cfg.ConcurrencyGiftCount, rl, f.cfg.ConcurrentOperations, invoiceCreator, purchaseProcessor, monitorProcessor, counter, errorLogsHelper)
+	buyer := giftBuyer.NewGiftBuyer(api, f.cfg.Receiver.UserReceiverID, f.cfg.Receiver.ChannelReceiverID, manager, notification, f.cfg.MaxBuyCount, f.cfg.RetryCount, f.cfg.RetryDelay, f.cfg.Prioritization, userCache, f.cfg.ConcurrencyGiftCount, rl, f.cfg.ConcurrentOperations, invoiceCreator, purchaseProcessor, monitorProcessor, counter, errorLogsHelper)
 	gitVersion := gitVersion.NewGitVersionController(f.cfg.RepoOwner, f.cfg.RepoName, f.cfg.ApiLink)
 
 	updateInterval := f.cfg.UpdateTicker

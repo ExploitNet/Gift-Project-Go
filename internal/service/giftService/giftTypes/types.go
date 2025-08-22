@@ -15,7 +15,9 @@ type GiftSummary struct {
 }
 
 type GiftRequire struct {
-	Gift         *tg.StarGift
+	Gift *tg.StarGift
+	// Receiver     []string
 	ReceiverType []int
 	CountForBuy  int64
+	Hide         bool
 }

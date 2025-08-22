@@ -105,8 +105,8 @@ type MockInvoiceCreator struct {
 	mock.Mock
 }
 
-func (m *MockInvoiceCreator) CreateInvoice(gift *tg.StarGift, receiverTypes []int) (*tg.InputInvoiceStarGift, error) {
-	args := m.Called(gift, receiverTypes)
+func (m *MockInvoiceCreator) CreateInvoice(gift *giftTypes.GiftRequire) (*tg.InputInvoiceStarGift, error) {
+	args := m.Called(gift)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -117,8 +117,8 @@ type MockPurchaseProcessor struct {
 	mock.Mock
 }
 
-func (m *MockPurchaseProcessor) PurchaseGift(ctx context.Context, gift *tg.StarGift, receiverTypes []int) error {
-	args := m.Called(ctx, gift, receiverTypes)
+func (m *MockPurchaseProcessor) PurchaseGift(ctx context.Context, gift *giftTypes.GiftRequire) error {
+	args := m.Called(ctx, gift)
 	return args.Error(0)
 }
 
@@ -188,9 +188,10 @@ func TestNewGiftBuyer(t *testing.T) {
 			[]string{"789012"},
 			mockManager,
 			mockNotification,
-			100, // maxBuyCount
-			3,   // retryCount
-			1.0, // retryDelay
+			100,  // maxBuyCount
+			3,    // retryCount
+			1.0,  // retryDelay
+			true, // prioritization
 			mockUserCache,
 			5, // concurrentGifts
 			mockRateLimiter,

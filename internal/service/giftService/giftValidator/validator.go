@@ -14,7 +14,7 @@ import (
 // against configured purchase criteria. It evaluates gifts based on price,
 // supply availability, and total star spending caps.
 type giftValidatorImpl struct {
-	limitedStatus, releaseBy bool
+	limitedStatus, releaseBy, premium bool
 	// criteria contains the list of validation criteria for gift purchases
 	criteria []config.Criterias
 
@@ -39,6 +39,7 @@ func NewGiftValidator(criterias []config.Criterias, giftParam config.GiftParam) 
 	return &giftValidatorImpl{
 		criteria:      criterias,
 		totalStarCap:  giftParam.TotalStarCap,
+		premium:       giftParam.OnlyPremium,
 		testMode:      giftParam.TestMode,
 		limitedStatus: giftParam.LimitedStatus,
 		releaseBy:     giftParam.ReleaseBy,
@@ -74,12 +75,17 @@ func (gv *giftValidatorImpl) IsEligible(gift *tg.StarGift) (*giftTypes.GiftRequi
 		return nil, false
 	}
 
+	if ok := gv.premiumValidation(gift); !ok {
+		return nil, false
+	}
+
 	for _, criteria := range gv.criteria {
 		if gv.priceValid(criteria, gift) && gv.supplyValid(criteria, gift) && gv.starCapValidation(gift) {
 			return &giftTypes.GiftRequire{
 				Gift:         gift,
 				ReceiverType: criteria.ReceiverType,
 				CountForBuy:  criteria.Count,
+				Hide:         criteria.Hide,
 			}, true
 		}
 	}
@@ -172,5 +178,14 @@ func (gv *giftValidatorImpl) releaseByValidation(gift *tg.StarGift) bool {
 	if hasReleasedBy && !gv.releaseBy {
 		return false
 	}
+	return true
+}
+
+func (gv *giftValidatorImpl) premiumValidation(gift *tg.StarGift) bool {
+	premium := gift.GetRequirePremium()
+	if gv.premium && !premium {
+		return false
+	}
+
 	return true
 }

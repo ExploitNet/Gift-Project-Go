@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"gift-buyer/internal/service/giftService/giftInterfaces"
+	"gift-buyer/internal/service/giftService/giftTypes"
 
 	"github.com/gotd/td/tg"
 	"github.com/stretchr/testify/assert"
@@ -31,8 +32,8 @@ type MockInvoiceCreator struct {
 	mock.Mock
 }
 
-func (m *MockInvoiceCreator) CreateInvoice(gift *tg.StarGift, receiverTypes []int) (*tg.InputInvoiceStarGift, error) {
-	args := m.Called(gift, receiverTypes)
+func (m *MockInvoiceCreator) CreateInvoice(gift *giftTypes.GiftRequire) (*tg.InputInvoiceStarGift, error) {
+	args := m.Called(gift)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -44,6 +45,15 @@ func createTestGift(id int64, stars int64) *tg.StarGift {
 	return &tg.StarGift{
 		ID:    id,
 		Stars: stars,
+	}
+}
+
+func createTestGiftRequire(gift *tg.StarGift) *giftTypes.GiftRequire {
+	return &giftTypes.GiftRequire{
+		Gift:         gift,
+		ReceiverType: []int{0},
+		CountForBuy:  1,
+		Hide:         true,
 	}
 }
 
@@ -79,13 +89,14 @@ func TestPaymentProcessorImpl_InvoiceCreation_Success(t *testing.T) {
 		processor := NewPaymentProcessor((*tg.Client)(nil), mockInvoiceCreator, mockRateLimiter)
 
 		gift := createTestGift(1, 100)
+		giftRequire := createTestGiftRequire(gift)
 		invoice := createTestInvoice(1)
 
 		// Настраиваем моки
-		mockInvoiceCreator.On("CreateInvoice", gift, mock.Anything).Return(invoice, nil)
+		mockInvoiceCreator.On("CreateInvoice", giftRequire).Return(invoice, nil)
 
 		// Тестируем только создание инвойса
-		createdInvoice, err := processor.invoiceCreator.CreateInvoice(gift, []int{})
+		createdInvoice, err := processor.invoiceCreator.CreateInvoice(giftRequire)
 		assert.NoError(t, err)
 		assert.Equal(t, invoice, createdInvoice)
 
@@ -142,12 +153,13 @@ func TestPaymentProcessorImpl_InvoiceCreation_Error(t *testing.T) {
 		processor := NewPaymentProcessor((*tg.Client)(nil), mockInvoiceCreator, mockRateLimiter)
 
 		gift := createTestGift(1, 100)
+		giftRequire := createTestGiftRequire(gift)
 
 		// Настраиваем мок для возврата ошибки
-		mockInvoiceCreator.On("CreateInvoice", gift, mock.Anything).Return((*tg.InputInvoiceStarGift)(nil), errors.New("invoice creation failed"))
+		mockInvoiceCreator.On("CreateInvoice", giftRequire).Return((*tg.InputInvoiceStarGift)(nil), errors.New("invoice creation failed"))
 
 		// Тестируем создание инвойса с ошибкой
-		createdInvoice, err := processor.invoiceCreator.CreateInvoice(gift, []int{})
+		createdInvoice, err := processor.invoiceCreator.CreateInvoice(giftRequire)
 		assert.Error(t, err)
 		assert.Nil(t, createdInvoice)
 		assert.Contains(t, err.Error(), "invoice creation failed")

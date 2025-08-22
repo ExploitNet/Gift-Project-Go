@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
+	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
 	"gift-buyer/pkg/utils"
-	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
@@ -41,8 +41,8 @@ func NewInvoiceCreator(userReceiver, channelReceiver []string, idCache giftInter
 // Returns:
 //   - *tg.InputInvoiceStarGift: configured invoice for the gift purchase
 //   - error: invoice creation error or unsupported receiver type
-func (ic *InvoiceCreatorImpl) CreateInvoice(gift *tg.StarGift, receiverTypes []int) (*tg.InputInvoiceStarGift, error) {
-	randReceiverType := utils.SelectRandomElementFast(receiverTypes)
+func (ic *InvoiceCreatorImpl) CreateInvoice(gift *giftTypes.GiftRequire) (*tg.InputInvoiceStarGift, error) {
+	randReceiverType := utils.SelectRandomElementFast(gift.ReceiverType)
 
 	switch randReceiverType {
 	case 0:
@@ -57,11 +57,11 @@ func (ic *InvoiceCreatorImpl) CreateInvoice(gift *tg.StarGift, receiverTypes []i
 	}
 }
 
-func (ic *InvoiceCreatorImpl) selfPurchase(gift *tg.StarGift) (*tg.InputInvoiceStarGift, error) {
+func (ic *InvoiceCreatorImpl) selfPurchase(gift *giftTypes.GiftRequire) (*tg.InputInvoiceStarGift, error) {
 	invoice := &tg.InputInvoiceStarGift{
 		Peer:     &tg.InputPeerSelf{},
-		GiftID:   gift.ID,
-		HideName: true,
+		GiftID:   gift.Gift.ID,
+		HideName: gift.Hide,
 		Message: tg.TextWithEntities{
 			Text: fmt.Sprintf("By @cheifssq %s_%d_%s", utils.RandString5(10), time.Now().UnixNano(), uuid.New().String()[:6]),
 		},
@@ -69,7 +69,7 @@ func (ic *InvoiceCreatorImpl) selfPurchase(gift *tg.StarGift) (*tg.InputInvoiceS
 	return invoice, nil
 }
 
-func (ic *InvoiceCreatorImpl) userPurchase(gift *tg.StarGift) (*tg.InputInvoiceStarGift, error) {
+func (ic *InvoiceCreatorImpl) userPurchase(gift *giftTypes.GiftRequire) (*tg.InputInvoiceStarGift, error) {
 	userInfo, err := ic.getUserInfo(context.Background(), utils.SelectRandomElementFast(ic.userReceiver))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create invoice without user access hash")
@@ -77,8 +77,8 @@ func (ic *InvoiceCreatorImpl) userPurchase(gift *tg.StarGift) (*tg.InputInvoiceS
 
 	invoice := &tg.InputInvoiceStarGift{
 		Peer:     &tg.InputPeerUser{UserID: userInfo.ID, AccessHash: userInfo.AccessHash},
-		GiftID:   gift.ID,
-		HideName: rand.Intn(2) == 0,
+		GiftID:   gift.Gift.ID,
+		HideName: gift.Hide,
 		Message: tg.TextWithEntities{
 			Text: fmt.Sprintf("By @cheifssq %s_%d_%s", utils.RandString5(10), time.Now().UnixNano(), uuid.New().String()[:6]),
 		},
@@ -86,7 +86,7 @@ func (ic *InvoiceCreatorImpl) userPurchase(gift *tg.StarGift) (*tg.InputInvoiceS
 	return invoice, nil
 }
 
-func (ic *InvoiceCreatorImpl) channelPurchase(gift *tg.StarGift) (*tg.InputInvoiceStarGift, error) {
+func (ic *InvoiceCreatorImpl) channelPurchase(gift *giftTypes.GiftRequire) (*tg.InputInvoiceStarGift, error) {
 	channelInfo, err := ic.getChannelInfo(context.Background(), utils.SelectRandomElementFast(ic.channelReceiver))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create invoice without channel access hash")
@@ -97,8 +97,8 @@ func (ic *InvoiceCreatorImpl) channelPurchase(gift *tg.StarGift) (*tg.InputInvoi
 			ChannelID:  ic.convertChannelID(channelInfo.ID),
 			AccessHash: channelInfo.AccessHash,
 		},
-		GiftID:   gift.ID,
-		HideName: true,
+		GiftID:   gift.Gift.ID,
+		HideName: gift.Hide,
 		Message: tg.TextWithEntities{
 			Text: fmt.Sprintf("By @cheifssq %s_%d", utils.RandString5(10), time.Now().UnixNano()),
 		},

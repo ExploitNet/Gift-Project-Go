@@ -8,6 +8,7 @@ import (
 	"gift-buyer/internal/service/giftService/giftInterfaces"
 	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
+	"sort"
 	"sync"
 	"time"
 
@@ -39,6 +40,8 @@ type giftBuyerImpl struct {
 	// userReceiver is the ID of the gift recipient
 	// channelReceiver is the ID of the gift recipient
 	userReceiver, channelReceiver []string
+
+	prioritization bool
 
 	// counter tracks and limits the total number of purchases
 	counter giftInterfaces.Counter
@@ -77,6 +80,7 @@ func NewGiftBuyer(
 	maxBuyCount int64,
 	retryCount int,
 	retryDelay float64,
+	prioritization bool,
 	idCache giftInterfaces.UserCache,
 	concurrentGifts int,
 	rateLimiter giftInterfaces.RateLimiter,
@@ -95,6 +99,7 @@ func NewGiftBuyer(
 		notification:         notification,
 		counter:              counter,
 		retryCount:           retryCount,
+		prioritization:       prioritization,
 		retryDelay:           retryDelay,
 		idCache:              idCache,
 		concurrentGifts:      concurrentGifts,
@@ -131,18 +136,21 @@ func (gm *giftBuyerImpl) BuyGift(ctx context.Context, gifts []*giftTypes.GiftReq
 		resultsCh = make(chan giftTypes.GiftResult)
 		doneCh    = make(chan struct{})
 	)
-
 	go gm.monitorProcessor.MonitorProcess(ctx, resultsCh, doneCh, gifts)
 
-	for _, require := range gifts {
-		wg.Add(1)
-		go func(gift *giftTypes.GiftRequire) {
-			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
+	if gm.prioritization {
+		gm.prioritizationBuy(ctx, gifts, resultsCh)
+	} else {
+		for _, require := range gifts {
+			wg.Add(1)
+			go func(gift *giftTypes.GiftRequire) {
+				defer wg.Done()
+				sem <- struct{}{}
+				defer func() { <-sem }()
 
-			gm.buyGift(ctx, gift.Gift, require, resultsCh)
-		}(require)
+				gm.buyGift(ctx, gift, resultsCh)
+			}(require)
+		}
 	}
 
 	go func() {
@@ -151,7 +159,16 @@ func (gm *giftBuyerImpl) BuyGift(ctx context.Context, gifts []*giftTypes.GiftReq
 	}()
 }
 
-func prioritizationBuy(ctx context.Context, gifts map[*tg.StarGift]*giftTypes.GiftRequire) {
+func (gm *giftBuyerImpl) prioritizationBuy(ctx context.Context, gifts []*giftTypes.GiftRequire, resChan chan<- giftTypes.GiftResult) {
+	sort.Slice(gifts, func(i, j int) bool {
+		return gifts[i].Gift.Stars > gifts[j].Gift.Stars
+	})
+
+	for _, gift := range gifts {
+		for i := int64(0); i < gift.CountForBuy; i++ {
+			gm.buyGiftWithRetry(ctx, gift, resChan)
+		}
+	}
 
 }
 
@@ -167,65 +184,67 @@ func prioritizationBuy(ctx context.Context, gifts map[*tg.StarGift]*giftTypes.Gi
 // Returns:
 //   - int64: number of successful purchases completed
 //   - error: purchase error after all retry attempts exhausted
-func (gm *giftBuyerImpl) buyGift(ctx context.Context, gift *tg.StarGift, require *giftTypes.GiftRequire, resChan chan<- giftTypes.GiftResult) {
+func (gm *giftBuyerImpl) buyGift(ctx context.Context, gift *giftTypes.GiftRequire, resChan chan<- giftTypes.GiftResult) {
 	var (
 		wg  sync.WaitGroup
 		sem = make(chan struct{}, gm.concurrentOperations)
 	)
 
-	for i := int64(0); i < require.CountForBuy; i++ {
+	for i := int64(0); i < gift.CountForBuy; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			gm.buyGiftWithRetry(ctx, gift, require.ReceiverType, resChan)
+			gm.buyGiftWithRetry(ctx, gift, resChan)
 		}()
 	}
 
 	wg.Wait()
 }
 
-func (gm *giftBuyerImpl) buyGiftWithRetry(ctx context.Context, gift *tg.StarGift, receiverTypes []int, resChan chan<- giftTypes.GiftResult) {
+func (gm *giftBuyerImpl) buyGiftWithRetry(ctx context.Context, gift *giftTypes.GiftRequire, resChan chan<- giftTypes.GiftResult) {
 	var lastErr error
 
 	for j := 0; j < gm.retryCount; j++ {
 		select {
 		case <-ctx.Done():
 			resChan <- giftTypes.GiftResult{
-				GiftID:  gift.ID,
+				GiftID:  gift.Gift.ID,
 				Success: false,
 				Err:     ctx.Err(),
 			}
 			return
 		default:
-			time.Sleep(time.Duration(gm.retryDelay) * time.Second)
 		}
 
 		if !gm.counter.TryIncrement() {
 			lastErr = errors.New("max buy count reached")
 			resChan <- giftTypes.GiftResult{
-				GiftID:  gift.ID,
+				GiftID:  gift.Gift.ID,
 				Success: false,
 				Err:     lastErr,
 			}
 			return
 		}
 
-		if err := gm.purchaseProcessor.PurchaseGift(ctx, gift, receiverTypes); err != nil {
+		if err := gm.purchaseProcessor.PurchaseGift(ctx, gift); err != nil {
 			gm.counter.Decrement()
 			lastErr = err
 			resChan <- giftTypes.GiftResult{
-				GiftID:  gift.ID,
+				GiftID:  gift.Gift.ID,
 				Success: false,
 				Err:     err,
+			}
+			if j < gm.retryCount-1 {
+				time.Sleep(time.Duration(gm.retryDelay) * time.Second)
 			}
 			continue
 		}
 
 		resChan <- giftTypes.GiftResult{
-			GiftID:  gift.ID,
+			GiftID:  gift.Gift.ID,
 			Success: true,
 			Err:     nil,
 		}
@@ -233,7 +252,7 @@ func (gm *giftBuyerImpl) buyGiftWithRetry(ctx context.Context, gift *tg.StarGift
 	}
 
 	resChan <- giftTypes.GiftResult{
-		GiftID:  gift.ID,
+		GiftID:  gift.Gift.ID,
 		Success: false,
 		Err:     lastErr,
 	}

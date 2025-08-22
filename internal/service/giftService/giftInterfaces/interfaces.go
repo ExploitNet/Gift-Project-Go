@@ -255,7 +255,7 @@ type InvoiceCreator interface {
 	// Parameters:
 	//   - gift: the star gift to create an invoice for
 	//
-	CreateInvoice(gift *tg.StarGift, receiverTypes []int) (*tg.InputInvoiceStarGift, error)
+	CreateInvoice(*giftTypes.GiftRequire) (*tg.InputInvoiceStarGift, error)
 }
 
 // PaymentProcessor defines the interface for processing purchases.
@@ -272,7 +272,7 @@ type PaymentProcessor interface {
 	//   - tg.PaymentsPaymentFormClass: the payment form object
 	//   - *tg.InputInvoiceStarGift: the invoice object
 	//   - error: payment form creation error or API communication failure
-	CreatePaymentForm(ctx context.Context, gift *tg.StarGift, receiverTypes []int) (tg.PaymentsPaymentFormClass, *tg.InputInvoiceStarGift, error)
+	CreatePaymentForm(ctx context.Context, gift *giftTypes.GiftRequire) (tg.PaymentsPaymentFormClass, *tg.InputInvoiceStarGift, error)
 }
 
 // PurchaseProcessor defines the interface for processing purchases.
@@ -287,7 +287,7 @@ type PurchaseProcessor interface {
 	//
 	// Returns:
 	//   - error: payment processing error or API communication failure
-	PurchaseGift(ctx context.Context, gift *tg.StarGift, receiverTypes []int) error
+	PurchaseGift(ctx context.Context, gift *giftTypes.GiftRequire) error
 }
 
 // MonitorProcessor defines the interface for monitoring the purchase process.

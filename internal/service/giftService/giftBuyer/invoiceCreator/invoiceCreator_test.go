@@ -3,6 +3,8 @@ package invoiceCreator
 import (
 	"testing"
 
+	"gift-buyer/internal/service/giftService/giftTypes"
+
 	"github.com/gotd/td/tg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -44,6 +46,15 @@ func createTestGift(id int64, stars int64) *tg.StarGift {
 	}
 }
 
+func createTestGiftRequire(gift *tg.StarGift, receiverType []int) *giftTypes.GiftRequire {
+	return &giftTypes.GiftRequire{
+		Gift:         gift,
+		ReceiverType: receiverType,
+		CountForBuy:  1,
+		Hide:         true,
+	}
+}
+
 func TestNewInvoiceCreator(t *testing.T) {
 	mockCache := &MockUserCache{}
 	userReceiver := []string{"123456"}
@@ -68,9 +79,10 @@ func TestInvoiceCreatorImpl_CreateInvoice(t *testing.T) {
 		)
 
 		gift := createTestGift(1, 100)
+		giftRequire := createTestGiftRequire(gift, []int{0})
 
 		// Тестируем создание инвойса для self (type 0)
-		invoice, err := creator.CreateInvoice(gift, []int{0})
+		invoice, err := creator.CreateInvoice(giftRequire)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, invoice)
@@ -88,7 +100,8 @@ func TestInvoiceCreatorImpl_SelfPurchase(t *testing.T) {
 		creator := NewInvoiceCreator([]string{}, []string{}, mockCache)
 
 		gift := createTestGift(1, 100)
-		invoice, err := creator.selfPurchase(gift)
+		giftRequire := createTestGiftRequire(gift, []int{0})
+		invoice, err := creator.selfPurchase(giftRequire)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, invoice)

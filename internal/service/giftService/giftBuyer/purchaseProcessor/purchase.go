@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gift-buyer/internal/service/giftService/giftInterfaces"
+	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
 
 	"github.com/gotd/td/tg"
@@ -36,12 +37,12 @@ func NewPurchaseProcessor(api *tg.Client, paymentProcessor giftInterfaces.Paymen
 //
 // Returns:
 //   - error: payment processing error or API communication failure
-func (pp *PurchaseProcessorImpl) PurchaseGift(ctx context.Context, gift *tg.StarGift, receiverTypes []int) error {
-	if !pp.validatePurchase(gift) {
+func (pp *PurchaseProcessorImpl) PurchaseGift(ctx context.Context, gift *giftTypes.GiftRequire) error {
+	if !pp.validatePurchase(gift.Gift) {
 		return errors.New("insufficient balance to buy gift")
 	}
 
-	paymentForm, invoice, err := pp.paymentProcessor.CreatePaymentForm(ctx, gift, receiverTypes)
+	paymentForm, invoice, err := pp.paymentProcessor.CreatePaymentForm(ctx, gift)
 	if err != nil {
 		return errors.Wrap(err, "failed to send stars form")
 	}
