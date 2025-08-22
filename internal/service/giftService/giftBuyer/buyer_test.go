@@ -126,7 +126,7 @@ type MockMonitorProcessor struct {
 	mock.Mock
 }
 
-func (m *MockMonitorProcessor) MonitorProcess(ctx context.Context, resultsCh chan giftTypes.GiftResult, doneCh chan struct{}, gifts map[*tg.StarGift]*giftTypes.GiftRequire) {
+func (m *MockMonitorProcessor) MonitorProcess(ctx context.Context, resultsCh chan giftTypes.GiftResult, doneCh chan struct{}, gifts []*giftTypes.GiftRequire) {
 	m.Called(ctx, resultsCh, doneCh, gifts)
 }
 
@@ -223,9 +223,9 @@ func TestGiftBuyerImpl_BuyGift(t *testing.T) {
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 		mockPurchaseProcessor.On("PurchaseGift", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 2, ReceiverType: []int{1}},
-			createTestGift(2, 200): {CountForBuy: 1, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 2, ReceiverType: []int{1}},
+			{Gift: createTestGift(2, 200), CountForBuy: 1, ReceiverType: []int{1}},
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -258,7 +258,7 @@ func TestGiftBuyerImpl_BuyGift(t *testing.T) {
 
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{}
+		gifts := []*giftTypes.GiftRequire{}
 
 		ctx := context.Background()
 
@@ -289,8 +289,8 @@ func TestGiftBuyerImpl_BuyGift(t *testing.T) {
 
 		mockMonitorProcessor.On("MonitorProcess", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 1, ReceiverType: []int{1}},
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -322,9 +322,9 @@ func TestGiftBuyerImpl_ConcurrentPurchases(t *testing.T) {
 		mockPurchaseProcessor.On("PurchaseGift", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		// Создаем много подарков для тестирования конкурентности
-		gifts := make(map[*tg.StarGift]*giftTypes.GiftRequire)
+		gifts := make([]*giftTypes.GiftRequire, 0, 10)
 		for i := int64(1); i <= 10; i++ {
-			gifts[createTestGift(i, 100)] = &giftTypes.GiftRequire{CountForBuy: 2, ReceiverType: []int{1}}
+			gifts = append(gifts, &giftTypes.GiftRequire{Gift: createTestGift(i, 100), CountForBuy: 2, ReceiverType: []int{1}})
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -364,8 +364,8 @@ func TestGiftBuyerImpl_MaxBuyCountLimit(t *testing.T) {
 		mockPurchaseProcessor.On("PurchaseGift", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		// Пытаемся купить больше чем лимит
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 5, ReceiverType: []int{1}}, // Пытаемся купить 5, но лимит 2
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 5, ReceiverType: []int{1}}, // Пытаемся купить 5, но лимит 2
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

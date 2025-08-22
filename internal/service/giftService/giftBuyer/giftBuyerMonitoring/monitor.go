@@ -26,12 +26,12 @@ func NewGiftBuyerMonitoring(api *tg.Client, notification giftInterfaces.Notifica
 	}
 }
 
-func (gm *GiftBuyerMonitoringImpl) MonitorProcess(ctx context.Context, resultsCh chan giftTypes.GiftResult, doneChan chan struct{}, gifts map[*tg.StarGift]*giftTypes.GiftRequire) {
+func (gm *GiftBuyerMonitoringImpl) MonitorProcess(ctx context.Context, resultsCh chan giftTypes.GiftResult, doneChan chan struct{}, gifts []*giftTypes.GiftRequire) {
 	summaries := make(map[int64]*giftTypes.GiftSummary)
 	errorCounts := make(map[string]int64)
-	for gift, require := range gifts {
-		summaries[gift.ID] = &giftTypes.GiftSummary{
-			GiftID:    gift.ID,
+	for _, require := range gifts {
+		summaries[require.Gift.ID] = &giftTypes.GiftSummary{
+			GiftID:    require.Gift.ID,
 			Requested: require.CountForBuy,
 			Success:   0,
 		}

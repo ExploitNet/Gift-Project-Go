@@ -124,7 +124,7 @@ func NewGiftBuyer(
 //
 // Returns:
 //   - error: purchase error, payment failure, or aggregated error from multiple failures
-func (gm *giftBuyerImpl) BuyGift(ctx context.Context, gifts map[*tg.StarGift]*giftTypes.GiftRequire) {
+func (gm *giftBuyerImpl) BuyGift(ctx context.Context, gifts []*giftTypes.GiftRequire) {
 	var (
 		wg        sync.WaitGroup
 		sem       = make(chan struct{}, gm.concurrentGifts)
@@ -134,21 +134,25 @@ func (gm *giftBuyerImpl) BuyGift(ctx context.Context, gifts map[*tg.StarGift]*gi
 
 	go gm.monitorProcessor.MonitorProcess(ctx, resultsCh, doneCh, gifts)
 
-	for gift, require := range gifts {
+	for _, require := range gifts {
 		wg.Add(1)
-		go func(gift *tg.StarGift, require *giftTypes.GiftRequire) {
+		go func(gift *giftTypes.GiftRequire) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			gm.buyGift(ctx, gift, require, resultsCh)
-		}(gift, require)
+			gm.buyGift(ctx, gift.Gift, require, resultsCh)
+		}(require)
 	}
 
 	go func() {
 		wg.Wait()
 		close(doneCh)
 	}()
+}
+
+func prioritizationBuy(ctx context.Context, gifts map[*tg.StarGift]*giftTypes.GiftRequire) {
+
 }
 
 // buyGift attempts to purchase a specific gift multiple times with retry logic.

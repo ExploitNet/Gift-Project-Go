@@ -223,10 +223,21 @@ func TestGiftMonitor_Start_SecondRunWithNewGifts(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, newGifts, 2)
-	assert.Contains(t, newGifts, gift1)
-	assert.Contains(t, newGifts, gift2)
-	assert.Equal(t, int64(10), newGifts[gift1].CountForBuy)
-	assert.Equal(t, int64(20), newGifts[gift2].CountForBuy)
+
+	// Проверяем что подарки присутствуют в результате
+	var foundGift1, foundGift2 bool
+	for _, giftReq := range newGifts {
+		if giftReq.Gift == gift1 {
+			foundGift1 = true
+			assert.Equal(t, int64(10), giftReq.CountForBuy)
+		}
+		if giftReq.Gift == gift2 {
+			foundGift2 = true
+			assert.Equal(t, int64(20), giftReq.CountForBuy)
+		}
+	}
+	assert.True(t, foundGift1, "Gift1 должен быть найден в результатах")
+	assert.True(t, foundGift2, "Gift2 должен быть найден в результатах")
 
 	mockCache.AssertExpectations(t)
 	mockManager.AssertExpectations(t)
@@ -318,8 +329,19 @@ func TestGiftMonitor_CheckForNewGifts_Success(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, newGifts, 2) // Both gifts should be eligible
-	assert.Contains(t, newGifts, gift1)
-	assert.Contains(t, newGifts, gift2)
+
+	// Проверяем что подарки присутствуют в результате
+	var foundGift1, foundGift2 bool
+	for _, giftReq := range newGifts {
+		if giftReq.Gift == gift1 {
+			foundGift1 = true
+		}
+		if giftReq.Gift == gift2 {
+			foundGift2 = true
+		}
+	}
+	assert.True(t, foundGift1, "Gift1 должен быть найден в результатах")
+	assert.True(t, foundGift2, "Gift2 должен быть найден в результатах")
 
 	mockCache.AssertExpectations(t)
 	mockManager.AssertExpectations(t)

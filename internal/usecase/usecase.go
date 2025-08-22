@@ -155,9 +155,9 @@ func (tc *useCaseImpl) Start() {
 				tc.wg.Add(2)
 				go func() {
 					defer tc.wg.Done()
-					for gift, require := range newGifts {
-						if err := tc.notification.SendNewGiftNotification(tc.ctx, gift); err != nil {
-							logger.GlobalLogger.Errorf("Error sending notification: %v, gift_id: %d, count: %d", err, gift.ID, require.CountForBuy)
+					for _, require := range newGifts {
+						if err := tc.notification.SendNewGiftNotification(tc.ctx, require.Gift); err != nil {
+							logger.GlobalLogger.Errorf("Error sending notification: %v, gift_id: %d, count: %d", err, require.Gift.ID, require.CountForBuy)
 						}
 					}
 				}()

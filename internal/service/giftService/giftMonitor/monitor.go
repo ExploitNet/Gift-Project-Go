@@ -12,8 +12,6 @@ import (
 
 	"sync"
 	"time"
-
-	"github.com/gotd/td/tg"
 )
 
 // giftMonitorImpl implements the GiftMonitor interface for monitoring new gifts.
@@ -106,8 +104,8 @@ func NewGiftMonitor(
 // Returns:
 //   - map[*tg.StarGift]int64: map of eligible gifts to their purchase quantities
 //   - error: monitoring error, API communication error, or context cancellation
-func (gm *giftMonitorImpl) Start(ctx context.Context) (map[*tg.StarGift]*giftTypes.GiftRequire, error) {
-	resultCh := make(chan map[*tg.StarGift]*giftTypes.GiftRequire, 10)
+func (gm *giftMonitorImpl) Start(ctx context.Context) ([]*giftTypes.GiftRequire, error) {
+	resultCh := make(chan []*giftTypes.GiftRequire, 10)
 	errCh := make(chan error, 10)
 
 	for {
@@ -155,13 +153,13 @@ func (gm *giftMonitorImpl) Start(ctx context.Context) (map[*tg.StarGift]*giftTyp
 // Returns:
 //   - map[*tg.StarGift]int64: map of new eligible gifts to purchase quantities
 //   - error: API communication error or validation error
-func (gm *giftMonitorImpl) checkForNewGifts(ctx context.Context) (map[*tg.StarGift]*giftTypes.GiftRequire, error) {
+func (gm *giftMonitorImpl) checkForNewGifts(ctx context.Context) ([]*giftTypes.GiftRequire, error) {
 	currentGifts, err := gm.manager.GetAvailableGifts(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	newValidGifts := make(map[*tg.StarGift]*giftTypes.GiftRequire, len(currentGifts))
+	newValidGifts := make([]*giftTypes.GiftRequire, 0, len(currentGifts))
 
 	for _, gift := range currentGifts {
 		if gm.cache.HasGift(gift.ID) {
@@ -169,7 +167,8 @@ func (gm *giftMonitorImpl) checkForNewGifts(ctx context.Context) (map[*tg.StarGi
 		}
 		if giftRequire, ok := gm.validator.IsEligible(gift); ok {
 			gm.infoLogsWriter.LogInfo(fmt.Sprintf("gift id %d is valid", gift.ID))
-			newValidGifts[gift] = giftRequire
+			giftRequire.Gift = gift
+			newValidGifts = append(newValidGifts, giftRequire)
 		}
 
 		gm.cache.SetGift(gift.ID, gift)

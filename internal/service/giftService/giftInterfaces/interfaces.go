@@ -52,7 +52,7 @@ type GiftBuyer interface {
 	//
 	// Returns:
 	//   - error: purchase error, payment failure, or API communication error
-	BuyGift(ctx context.Context, gifts map[*tg.StarGift]*giftTypes.GiftRequire)
+	BuyGift(ctx context.Context, gifts []*giftTypes.GiftRequire)
 
 	// Close releases any resources held by the gift buyer (e.g., rate limiter).
 	Close()
@@ -115,9 +115,9 @@ type GiftMonitor interface {
 	//   - ctx: context for cancellation and timeout control
 	//
 	// Returns:
-	//   - map[*tg.StarGift]int64: map of eligible gifts to their purchase quantities
+	//   - []*giftTypes.GiftRequire: slice of eligible gifts with their purchase requirements
 	//   - error: monitoring error, API communication error, or context cancellation
-	Start(ctx context.Context) (map[*tg.StarGift]*giftTypes.GiftRequire, error)
+	Start(ctx context.Context) ([]*giftTypes.GiftRequire, error)
 
 	// Pause pauses the gift monitoring process.
 	Pause()
@@ -301,7 +301,7 @@ type MonitorProcessor interface {
 	//   - resultsCh: channel to receive purchase results
 	//   - doneChan: channel to signal completion
 	//   - gifts: map of gifts to their purchase quantities
-	MonitorProcess(ctx context.Context, resultsCh chan giftTypes.GiftResult, doneChan chan struct{}, gifts map[*tg.StarGift]*giftTypes.GiftRequire)
+	MonitorProcess(ctx context.Context, resultsCh chan giftTypes.GiftResult, doneChan chan struct{}, gifts []*giftTypes.GiftRequire)
 }
 
 // Counter defines the interface for managing a counter with atomic operations.

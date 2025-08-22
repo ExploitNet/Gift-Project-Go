@@ -82,9 +82,9 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 		mockErrorWriter := &MockLogsWriter{}
 		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 2, ReceiverType: []int{1}},
-			createTestGift(2, 200): {CountForBuy: 1, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 2, ReceiverType: []int{1}},
+			{Gift: createTestGift(2, 200), CountForBuy: 1, ReceiverType: []int{1}},
 		}
 
 		resultsCh := make(chan giftTypes.GiftResult, 10)
@@ -121,8 +121,8 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 		mockErrorWriter := &MockLogsWriter{}
 		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 2, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 2, ReceiverType: []int{1}},
 		}
 
 		resultsCh := make(chan giftTypes.GiftResult, 10)
@@ -157,8 +157,8 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 		mockErrorWriter := &MockLogsWriter{}
 		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 1, ReceiverType: []int{1}},
 		}
 
 		resultsCh := make(chan giftTypes.GiftResult, 10)
@@ -192,8 +192,8 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 		mockErrorWriter := &MockLogsWriter{}
 		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 1, ReceiverType: []int{1}},
 		}
 
 		resultsCh := make(chan giftTypes.GiftResult, 10)
@@ -227,8 +227,8 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 		mockErrorWriter := &MockLogsWriter{}
 		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 1, ReceiverType: []int{1}},
 		}
 
 		resultsCh := make(chan giftTypes.GiftResult, 10)
@@ -265,8 +265,8 @@ func TestGiftBuyerMonitoringImpl_MonitorProcess(t *testing.T) {
 		mockErrorWriter := &MockLogsWriter{}
 		monitor := NewGiftBuyerMonitoring(nil, mockNotification, mockInfoWriter, mockErrorWriter)
 
-		gifts := map[*tg.StarGift]*giftTypes.GiftRequire{
-			createTestGift(1, 100): {CountForBuy: 1, ReceiverType: []int{1}},
+		gifts := []*giftTypes.GiftRequire{
+			{Gift: createTestGift(1, 100), CountForBuy: 1, ReceiverType: []int{1}},
 		}
 
 		resultsCh := make(chan giftTypes.GiftResult, 10)

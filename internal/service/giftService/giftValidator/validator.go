@@ -77,6 +77,7 @@ func (gv *giftValidatorImpl) IsEligible(gift *tg.StarGift) (*giftTypes.GiftRequi
 	for _, criteria := range gv.criteria {
 		if gv.priceValid(criteria, gift) && gv.supplyValid(criteria, gift) && gv.starCapValidation(gift) {
 			return &giftTypes.GiftRequire{
+				Gift:         gift,
 				ReceiverType: criteria.ReceiverType,
 				CountForBuy:  criteria.Count,
 			}, true

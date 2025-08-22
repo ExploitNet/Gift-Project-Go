@@ -66,6 +66,8 @@ type SoftConfig struct {
 	// When false: logs are written ONLY to log files, console output is disabled
 	// This flag is useful for production environments where console output should be minimized
 	LogFlag bool `json:"log_flag"`
+
+	UserLimitUse bool `json:"user_limit_use"`
 }
 
 type GiftParam struct {

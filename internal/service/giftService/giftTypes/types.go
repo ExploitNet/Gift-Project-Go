@@ -1,5 +1,7 @@
 package giftTypes
 
+import "github.com/gotd/td/tg"
+
 type GiftResult struct {
 	GiftID  int64
 	Success bool
@@ -13,6 +15,7 @@ type GiftSummary struct {
 }
 
 type GiftRequire struct {
+	Gift         *tg.StarGift
 	ReceiverType []int
 	CountForBuy  int64
 }
