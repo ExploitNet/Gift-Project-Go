@@ -61,10 +61,7 @@ func (ic *InvoiceCreatorImpl) selfPurchase(gift *giftTypes.GiftRequire) (*tg.Inp
 	invoice := &tg.InputInvoiceStarGift{
 		Peer:     &tg.InputPeerSelf{},
 		GiftID:   gift.Gift.ID,
-		HideName: gift.Hide,
-		Message: tg.TextWithEntities{
-			Text: fmt.Sprintf("By @cheifssq %s_%d_%s", utils.RandString5(10), time.Now().UnixNano(), uuid.New().String()[:6]),
-		},
+		HideName: gift.Hide
 	}
 	return invoice, nil
 }
@@ -78,10 +75,7 @@ func (ic *InvoiceCreatorImpl) userPurchase(gift *giftTypes.GiftRequire) (*tg.Inp
 	invoice := &tg.InputInvoiceStarGift{
 		Peer:     &tg.InputPeerUser{UserID: userInfo.ID, AccessHash: userInfo.AccessHash},
 		GiftID:   gift.Gift.ID,
-		HideName: gift.Hide,
-		Message: tg.TextWithEntities{
-			Text: fmt.Sprintf("By @cheifssq %s_%d_%s", utils.RandString5(10), time.Now().UnixNano(), uuid.New().String()[:6]),
-		},
+		HideName: gift.Hide
 	}
 	return invoice, nil
 }
@@ -98,10 +92,7 @@ func (ic *InvoiceCreatorImpl) channelPurchase(gift *giftTypes.GiftRequire) (*tg.
 			AccessHash: channelInfo.AccessHash,
 		},
 		GiftID:   gift.Gift.ID,
-		HideName: gift.Hide,
-		Message: tg.TextWithEntities{
-			Text: fmt.Sprintf("By @cheifssq %s_%d", utils.RandString5(10), time.Now().UnixNano()),
-		},
+		HideName: gift.Hide
 	}
 	return invoice, nil
 }
