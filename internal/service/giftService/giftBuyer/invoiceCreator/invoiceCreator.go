@@ -7,9 +7,7 @@ import (
 	"gift-buyer/internal/service/giftService/giftTypes"
 	"gift-buyer/pkg/errors"
 	"gift-buyer/pkg/utils"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/gotd/td/tg"
 )
 
